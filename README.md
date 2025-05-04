@@ -1,100 +1,106 @@
-# Lnansy's World - 个人博客网站
+# Lnansy's Blog
 
-这是一个功能齐全的个人博客网站，支持文章发布、内容展示、用户互动、个人展示等功能。
-
-## 功能特点
-
-### 内容展示功能
-- **文章发布与展示**：支持富文本编辑器，可插入图片、视频、音频等多媒体元素
-- **页面布局设计**：响应式设计，适配各种设备
-- **评论和互动功能**：支持用户评论和互动
-- **归档功能**：按时间归档文章
-- **标签功能**：支持文章标签和标签筛选
-
-### 用户体验功能
-- **响应式设计**：适配桌面电脑、笔记本电脑、平板电脑和手机
-- **搜索功能优化**：支持关键词搜索和模糊搜索
-- **加载速度优化**：优化图片和多媒体文件加载速度
-
-### 个人展示功能
-- **关于博主页面**：展示博主照片、个人简介、联系方式等信息
-- **作品集展示**：展示博主的作品和项目
-
-### 其他功能
-- **订阅功能**：支持电子邮件订阅
-- **社交分享功能**：支持分享到微信、微博、推特、脸书等平台
+一个使用MongoDB数据库的个人博客系统，支持文章发布、随笔记录、评论和点赞功能。
 
 ## 技术栈
 
-- **前端**：HTML5、CSS3、JavaScript
-- **富文本编辑器**：Quill
-- **响应式设计**：自定义CSS框架
-- **图标**：Font Awesome
-- **字体**：Google Fonts (Poppins, Open Sans)
+- **前端**：HTML、CSS、JavaScript
+- **后端**：Node.js、Express
+- **数据库**：MongoDB
+- **用户认证**：bcryptjs
 
-## 项目结构
+## 功能特点
+
+- 用户注册与登录
+- 文章和随笔的发布、编辑和删除
+- 文章评论和点赞
+- 文章归档和标签分类
+- 访问统计
+
+## 系统要求
+
+- Node.js >= 14.0.0
+- MongoDB >= 4.4
+
+## 安装步骤
+
+1. 克隆代码库：
+
+```bash
+git clone <repository-url>
+cd blog
+```
+
+2. 安装依赖：
+
+```bash
+npm install
+```
+
+3. 创建环境变量文件：
+
+创建一个名为`.env`的文件在项目根目录下，添加以下内容：
 
 ```
-blog2/
-├── index.html          # 首页
-├── about.html          # 关于我页面
-├── portfolio.html      # 作品集页面
-├── records.html        # 记录页面
-├── messages.html       # 留言页面
-├── music.html          # 音乐页面
-├── music-detail.html   # 音乐详情页面
-├── login.html          # 登录页面
-├── styles.css          # 样式文件
-└── images/             # 图片资源目录
-    ├── portfolio/      # 作品集图片
-    └── ...             # 其他图片
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/blog_db
 ```
 
-## 安装和使用
+4. 启动MongoDB：
 
-1. 克隆仓库到本地
-   ```
-   git clone https://github.com/yourusername/blog2.git
-   ```
+确保MongoDB服务已经启动。
 
-2. 打开项目目录
-   ```
-   cd blog2
-   ```
+5. 启动应用：
 
-3. 使用浏览器打开 index.html 文件
-   ```
-   open index.html  # macOS
-   start index.html  # Windows
-   ```
+```bash
+npm start
+```
 
-## 自定义配置
+或者使用开发模式（自动重启）：
 
-- 修改 `styles.css` 文件中的 CSS 变量可以自定义网站主题颜色
-- 在 HTML 文件中修改内容可以自定义网站内容
-- 替换 `images` 目录中的图片可以自定义网站图片
+```bash
+npm run dev
+```
 
-## 浏览器兼容性
+6. 访问网站：
 
-- Chrome (最新版)
-- Firefox (最新版)
-- Safari (最新版)
-- Edge (最新版)
+打开浏览器，访问 `http://localhost:3000`
 
-## 贡献指南
+## 初始化管理员账户
 
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建 Pull Request
+首次使用时，需要创建一个管理员账户。可以通过注册页面注册普通用户，然后在MongoDB中手动将用户角色更改为管理员：
+
+```javascript
+db.users.updateOne(
+  { username: "Lnansy" },
+  { $set: { isAdmin: true } }
+)
+```
+
+## 目录结构
+
+```
+/
+|-- README.md           # 项目说明文档
+|-- server.js           # 服务器入口文件
+|-- models.js           # 数据库模型
+|-- package.json        # 项目依赖描述
+|-- .env                # 环境变量配置
+|-- index.html          # 网站首页
+|-- login.html          # 登录页面
+|-- register.html       # 注册页面
+|-- js/
+|   |-- api.js          # API接口适配器
+|   |-- archives.js     # 归档功能脚本
+|-- styles.css          # 全局样式
+```
+
+## 开发建议
+
+1. 数据库备份：定期备份MongoDB数据库
+2. 安全性：考虑添加JWT认证以增强安全性
+3. 图片上传：可以考虑集成云存储服务来处理文章图片上传
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 详情请参阅 [LICENSE](LICENSE) 文件
-
-## 联系方式
-
-Lnansy - email@example.com
-
-项目链接: [https://github.com/yourusername/blog2](https://github.com/yourusername/blog2) 
+[MIT](LICENSE) 
