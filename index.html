@@ -63,27 +63,55 @@
             filter: brightness(0.9) saturate(1.2);
         }
 
-        /* 新增的布局样式 */
+        /* 三栏布局样式 */
         .content-wrapper {
             display: flex;
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            gap: 20px;
+            gap: 25px;
         }
 
         .left-sidebar {
-            width: 300px;
-            flex-shrink: 0;
-        }
-
-        .right-sidebar {
-            width: 300px;
+            width: 25%;
             flex-shrink: 0;
         }
 
         .main-area {
+            width: 50%;
             flex: 1;
+            min-width: 0; /* 防止内容溢出 */
+        }
+
+        .right-sidebar {
+            width: 25%;
+            flex-shrink: 0;
+        }
+
+        /* 页面响应式布局 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .left-sidebar, .main-area, .right-sidebar {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+
+        /* 卡片样式优化 */
+        .profile-card, .welcome-card, .tag-cloud-section {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .profile-card:hover, .welcome-card:hover, .tag-cloud-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
 
         .profile-card {
@@ -136,12 +164,14 @@
 
         .profile-stats {
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
+            gap: 30px;
             margin-bottom: 20px;
         }
 
         .stat-item {
             text-align: center;
+            flex: 0 0 auto;
         }
 
         .stat-value {
@@ -188,34 +218,47 @@
         }
 
         .tag-cloud {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 8px;
+            flex-grow: 1;
         }
 
         .tag {
-            display: inline-flex;
+            display: flex;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 5px;
-            padding: 5px 12px;
+            padding: 12px 5px;
             background: #f0f7ff;
             color: #007bff;
-            border-radius: 15px;
+            border-radius: 8px;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            height: 100%;
+        }
+
+        .tag i {
+            font-size: 18px;
+            margin-bottom: 2px;
         }
 
         .tag:hover {
             background: #007bff;
             color: white;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
         }
 
         .tag.active {
             background: #007bff;
             color: white;
+            transform: scale(1.05);
         }
 
         .content-excerpt {
@@ -1043,20 +1086,146 @@
             transform: translateX(5px);
         }
 
-        /* 移除浮动标签云样式，改为右侧栏样式 */
-        .tag-cloud-section {
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 10px;
-            padding: 20px;
+        /* 欢迎卡片样式 */
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.7);
             margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 25px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .welcome-card .card-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 24px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .welcome-content {
+            color: #555;
+            line-height: 1.8;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .welcome-content p {
+            margin-bottom: 15px;
+        }
+
+        .welcome-content ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-content li {
+            margin-bottom: 10px;
+        }
+
+        .welcome-content li i {
+            color: #007bff;
+            margin-right: 8px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .welcome-actions {
+            margin-top: auto;
+            text-align: center;
+            padding-top: 20px;
+        }
+
+        .view-all-btn {
+            display: inline-flex;
+            align-items: center;
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
+        }
+
+        .view-all-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+        }
+
+        .view-all-btn i {
+            margin-right: 8px;
+        }
+
+        /* 标签云卡片样式 */
+        .tag-cloud-section {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .tag-cloud-section .card-title {
-            font-size: 20px;
+            font-size: 18px;
             margin-bottom: 15px;
             text-align: center;
-            color: #333;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* 标签云布局 */
+        .tag-cloud {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 8px;
+            flex-grow: 1;
+        }
+
+        /* 标签样式 */
+        .tag {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 12px 5px;
+            background: #f0f7ff;
+            color: #007bff;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            height: 100%;
+        }
+
+        .tag i {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+
+        .tag:hover {
+            background: #007bff;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .tag.active {
+            background: #007bff;
+            color: white;
+            transform: scale(1.05);
         }
 
         /* 删除浮动标签云相关样式 */
@@ -1074,6 +1243,10 @@
             padding: 15px;
             border-radius: 8px;
             white-space: pre-wrap;
+        }
+
+        #userSection:empty {
+            display: none;
         }
     </style>
 </head>
@@ -1126,16 +1299,12 @@
                         <p class="profile-bio">热爱生活，热爱创作，热爱分享</p>
                         <div class="profile-stats">
                             <div class="stat-item">
-                                <div class="stat-value" id="stat-article">128</div>
+                                <div class="stat-value" id="stat-article">0</div>
                                 <div class="stat-label">文章</div>
                 </div>
                             <div class="stat-item">
-                                <div class="stat-value" id="stat-tag">256</div>
+                                <div class="stat-value" id="stat-tag">0</div>
                                 <div class="stat-label">标签</div>
-                </div>
-                            <div class="stat-item">
-                                <div class="stat-value" id="stat-visit">1024</div>
-                                <div class="stat-label">访问</div>
                         </div>
                     </div>
                 </div>
@@ -1144,31 +1313,23 @@
 
             <!-- 中间区域 -->
             <div class="main-area">
-                <!-- 文章区域 -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">文章</h2>
-                        <button class="add-content-btn" onclick="handleAddContent('article')" data-type="article">
-                            <i class="fas fa-plus"></i>
-                            <span>发布文章</span>
-                    </button>
+                <!-- 欢迎信息 -->
+                <div class="card welcome-card">
+                    <h2 class="card-title">欢迎来到Lnansy的博客</h2>
+                    <div class="welcome-content">
+                        <p>这是一个现代化的个人博客系统，您可以在这里记录生活、分享知识、交流思想。</p>
+                        <p>主要功能：</p>
+                        <ul>
+                            <li><i class="fas fa-pencil-alt"></i> 发布文章和随笔</li>
+                            <li><i class="fas fa-comment"></i> 评论互动</li>
+                            <li><i class="fas fa-heart"></i> 点赞支持</li>
+                            <li><i class="fas fa-tags"></i> 分类和标签</li>
+                        </ul>
+                        <div class="welcome-actions">
+                            <a href="records.html" class="view-all-btn">
+                                <i class="fas fa-list"></i> 浏览所有内容
+                            </a>
                     </div>
-                    <div id="articleList" class="content-list" data-type="article">
-                        <!-- 文章内容将通过JavaScript动态添加 -->
-                    </div>
-                </div>
-
-                <!-- 随笔区域 -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">随笔</h2>
-                        <button class="add-content-btn" onclick="handleAddContent('essay')" data-type="essay">
-                            <i class="fas fa-plus"></i>
-                            <span>发布随笔</span>
-                    </button>
-                </div>
-                    <div id="essayList" class="content-list" data-type="essay">
-                        <!-- 随笔内容将通过JavaScript动态添加 -->
             </div>
                 </div>
             </div>
@@ -1252,24 +1413,79 @@
         </div>
     </div>
 
-    <script src="js/archives.js"></script>
-    <!-- 添加 API.js -->
     <script src="js/api.js"></script>
+    <script src="js/archives.js"></script>
     <script>
-        // 使用新的API方法替换localStorage相关代码
-        
         // 检查用户登录状态
-        function updateUserSection() {
-            const currentUser = API.auth.getCurrentUser();
+        function checkUserLoginStatus() {
+            try {
+                // 直接从localStorage获取用户信息
+                const user = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+                updateUserSection(user);
+            } catch (error) {
+                console.error('检查用户登录状态失败:', error);
+                updateUserSection({ username: '访客' });
+            }
+        }
+
+        // 更新资料卡统计
+        function updateProfileStats() {
+            try {
+                // 从localStorage获取文章数据，与records.html保持一致
+            const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+            
+                // 计算文章和随笔的总数
+                const totalArticles = publishedContent.length;
+                const articleNode = document.getElementById('stat-article');
+                if (articleNode) articleNode.textContent = totalArticles;
+                
+                // 收集所有标签并计数
+                const allTags = new Set();
+            publishedContent.forEach(item => {
+                    // 首先添加分类作为标签
+                if (item.category) {
+                        allTags.add(item.category);
+                }
+                    
+                    // 然后添加文章的标签
+                if (item.tags && Array.isArray(item.tags)) {
+                        item.tags.forEach(tag => allTags.add(tag));
+                    }
+                });
+                
+                // 更新标签数量
+                const tagNode = document.getElementById('stat-tag');
+                if (tagNode) tagNode.textContent = allTags.size;
+                
+                console.log('[Debug] 资料卡统计数据已更新:', {
+                    articles: totalArticles,
+                    tags: allTags.size
+                });
+            } catch (error) {
+                console.error('更新资料卡统计失败:', error);
+                // 在更新失败时显示默认值，避免显示NaN或undefined
+                const articleNode = document.getElementById('stat-article');
+                const tagNode = document.getElementById('stat-tag');
+                
+                if (articleNode) articleNode.textContent = '0';
+                if (tagNode) tagNode.textContent = '0';
+            }
+        }
+
+        // 更新用户状态
+        function updateUserSection(user) {
+            console.log('[Debug] 更新用户状态开始');
             const userSection = document.getElementById('userSection');
             
-            if (currentUser && currentUser.username !== '访客') {
+            if (user && user.username !== '访客') {
+                console.log('[Debug] 当前用户已登录:', user.username);
+                // 显示用户信息
                 userSection.innerHTML = `
                     <div class="user-profile">
                         <div class="user-avatar">
                             <i class="fas fa-user"></i>
                         </div>
-                        <span>${currentUser.username}</span>
+                        <span>${user.username}</span>
                         <div class="user-menu">
                             <a href="#" class="user-menu-item" id="logoutBtn">
                                 <i class="fas fa-sign-out-alt"></i>
@@ -1280,15 +1496,13 @@
                 `;
 
                 // 添加登出功能
-                document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+                document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                    console.log('[Debug] 用户点击登出按钮');
                     e.preventDefault();
-                    try {
-                        await API.auth.logout();
-                        window.location.reload();
-                    } catch (error) {
-                        console.error('登出失败:', error);
-                        alert('登出失败，请稍后重试');
-                    }
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('currentUser');
+                    console.log('[Debug] 用户已登出，正在重新加载页面');
+                    window.location.reload();
                 });
 
                 // 添加用户菜单显示/隐藏功能
@@ -1296,33 +1510,192 @@
                 const userMenu = document.querySelector('.user-menu');
 
                 userProfile.addEventListener('click', () => {
+                    console.log('[Debug] 用户菜单被点击');
                     userMenu.classList.toggle('active');
                 });
 
                 // 点击其他地方关闭菜单
                 document.addEventListener('click', (e) => {
                     if (!userProfile.contains(e.target)) {
+                        console.log('[Debug] 点击外部区域，关闭用户菜单');
                         userMenu.classList.remove('active');
                     }
                 });
             } else {
-                userSection.innerHTML = `
-                    <a href="login.html" class="login-link">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <span>登录</span>
-                    </a>
-                `;
+                console.log('[Debug] 当前用户未登录');
+                // 不显示任何内容，移除登录链接
+                userSection.innerHTML = '';
             }
+            console.log('[Debug] 用户状态更新完成');
         }
 
-        // 初始化页面功能
-        document.addEventListener('DOMContentLoaded', () => {
-            // 更新用户状态
-            updateUserSection();
+        // 标签筛选函数
+        window.filterByTag = async function(category) {
+            console.log('[Debug] 按标签筛选:', category);
             
-            // 页面内容已通过API.js加载
-        });
+            // 更新标签样式
+            document.querySelectorAll('.tag').forEach(tag => {
+                if (tag.dataset.category === category) {
+                    tag.classList.add('active');
+                } else {
+                    tag.classList.remove('active');
+                }
+            });
 
+            try {
+                // 先通过localStorage中的数据检查是否有内容
+                    const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+                const filteredContent = publishedContent.filter(item => 
+                    item.category === category || (item.tags && item.tags.includes(category))
+                );
+                
+                if (filteredContent.length > 0) {
+                    // 如果本地有内容，直接跳转
+                    window.location.href = `records.html?category=${category}`;
+                            return;
+                        }
+                
+                // 尝试从API获取内容
+                try {
+                    const response = await api.contents.getList({ category: category });
+                    
+                    if (response && response.articles && response.articles.length > 0) {
+                        // 如果有内容，跳转到筛选结果页面
+                        window.location.href = `records.html?category=${category}`;
+                } else {
+                        // 如果没有内容，显示提示信息
+                        alert(`暂无"${category}"分类的内容`);
+                    }
+                } catch (apiError) {
+                    console.error('API请求失败，使用本地数据:', apiError);
+                    // API请求失败，使用本地判断结果
+                    alert(`暂无"${category}"分类的内容`);
+                }
+                } catch (error) {
+                console.error('获取分类内容失败:', error);
+                alert(`暂无"${category}"分类的内容`);
+            }
+        };
+
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查用户登录状态
+            checkUserLoginStatus();
+            
+            // 更新资料卡统计
+            updateProfileStats();
+            
+            // 更新标签云
+            updateTagCloud();
+            
+            // 设置定时更新统计
+            setInterval(updateProfileStats, 60000); // 每分钟更新一次
+        });
+        
+        // 更新标签云数据
+        function updateTagCloud() {
+            try {
+                const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+                const tagCounts = {};
+                
+                // 默认标签和图标
+                const defaultTags = {
+                    'life': 'fa-heart',
+                    'tech': 'fa-laptop-code',
+                    'reading': 'fa-book',
+                    'travel': 'fa-plane',
+                    'music': 'fa-music',
+                    'other': 'fa-ellipsis-h'
+                };
+                
+                // 初始化默认标签为0计数
+                Object.keys(defaultTags).forEach(tag => {
+                    tagCounts[tag] = 0;
+                });
+                
+                // 收集分类和标签数据
+                publishedContent.forEach(item => {
+                    // 添加分类
+                    if (item.category) {
+                        tagCounts[item.category] = (tagCounts[item.category] || 0) + 1;
+                    }
+                    
+                    // 添加标签
+                    if (item.tags && Array.isArray(item.tags)) {
+                        item.tags.forEach(tag => {
+                            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                        });
+                    }
+                });
+                
+                // 获取标签云容器
+                const tagCloud = document.getElementById('tagCloud');
+                if (!tagCloud) return;
+                
+                // 清空现有标签
+                tagCloud.innerHTML = '';
+                
+                // 首先添加默认标签
+                Object.keys(defaultTags).forEach(tag => {
+                    const icon = defaultTags[tag];
+                    tagCloud.innerHTML += `
+                        <a href="javascript:void(0)" class="tag" data-category="${tag}" onclick="filterByTag('${tag}')">
+                            <i class="fas ${icon}"></i>
+                            ${tag}
+                        </a>
+                    `;
+                });
+                
+                // 如果有更多标签（非默认标签），按使用频率添加
+                const nonDefaultTags = Object.keys(tagCounts)
+                    .filter(tag => !defaultTags[tag])
+                    .sort((a, b) => tagCounts[b] - tagCounts[a]);
+                
+                // 如果有空间，可以添加额外标签
+                if (nonDefaultTags.length > 0) {
+                    nonDefaultTags.slice(0, 2).forEach(tag => {
+                        tagCloud.innerHTML += `
+                            <a href="javascript:void(0)" class="tag" data-category="${tag}" onclick="filterByTag('${tag}')">
+                                <i class="fas fa-tag"></i>
+                                ${tag}
+                            </a>
+                        `;
+                    });
+                }
+                
+                console.log('[Debug] 标签云已更新');
+            } catch (error) {
+                console.error('更新标签云失败:', error);
+            }
+        }
+    </script>
+    
+    <!-- 预先填充用户状态，避免闪烁 -->
+    <script>
+        // 立即执行以避免登录按钮闪烁
+        (function() {
+            try {
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+                if (user && user.username !== '访客') {
+                    document.getElementById('userSection').innerHTML = `
+                        <div class="user-profile">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                    </div>
+                            <span>${user.username}</span>
+                            <div class="user-menu">
+                                <a href="#" class="user-menu-item">退出登录</a>
+                    </div>
+                </div>
+            `;
+                } else {
+                    // 未登录用户不显示任何内容
+                    document.getElementById('userSection').innerHTML = '';
+                }
+                    } catch (e) {
+                console.error('预填充用户状态出错:', e);
+            }
+        })();
     </script>
 </body>
 </html> 

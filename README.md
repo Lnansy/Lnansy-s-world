@@ -1,106 +1,122 @@
 # Lnansy's Blog
 
-一个使用MongoDB数据库的个人博客系统，支持文章发布、随笔记录、评论和点赞功能。
-
-## 技术栈
-
-- **前端**：HTML、CSS、JavaScript
-- **后端**：Node.js、Express
-- **数据库**：MongoDB
-- **用户认证**：bcryptjs
+一个现代化的个人博客系统，使用Node.js和MySQL提供后端支持。
 
 ## 功能特点
 
-- 用户注册与登录
-- 文章和随笔的发布、编辑和删除
-- 文章评论和点赞
-- 文章归档和标签分类
-- 访问统计
+- 文章和随笔的发布与管理
+- 用户注册和登录系统
+- 评论和点赞功能
+- 标签分类和搜索
+- 访问统计和数据分析
+- 响应式设计，适配移动端
 
-## 系统要求
+## 技术栈
 
-- Node.js >= 14.0.0
-- MongoDB >= 4.4
+- 前端：HTML, CSS, JavaScript
+- 后端：Node.js, Express
+- 数据库：MySQL
+- 认证：JWT (JSON Web Token)
+- 密码加密：bcrypt
 
-## 安装步骤
+## 安装指南
+
+### 前提条件
+
+- Node.js (v12+)
+- MySQL (v5.7+)
+
+### 安装步骤
 
 1. 克隆代码库：
 
 ```bash
-git clone <repository-url>
-cd blog
-```
+git clone https://github.com/yourusername/lnansy-blog.git
+cd lnansy-blog
+   ```
 
 2. 安装依赖：
 
 ```bash
 npm install
-```
+   ```
 
-3. 创建环境变量文件：
-
-创建一个名为`.env`的文件在项目根目录下，添加以下内容：
-
-```
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/blog_db
-```
-
-4. 启动MongoDB：
-
-确保MongoDB服务已经启动。
-
-5. 启动应用：
+3. 初始化数据库：
 
 ```bash
-npm start
+npm run init-db
 ```
 
-或者使用开发模式（自动重启）：
+4. 启动服务器：
 
 ```bash
 npm run dev
 ```
 
-6. 访问网站：
+### 配置
 
-打开浏览器，访问 `http://localhost:3000`
-
-## 初始化管理员账户
-
-首次使用时，需要创建一个管理员账户。可以通过注册页面注册普通用户，然后在MongoDB中手动将用户角色更改为管理员：
+数据库配置可以在 `server.js` 文件中修改：
 
 ```javascript
-db.users.updateOne(
-  { username: "Lnansy" },
-  { $set: { isAdmin: true } }
-)
+const pool = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: 'lxm060905',  // 修改为你的MySQL密码
+  database: 'blog_db',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+   ```
+
+## 使用指南
+
+### 管理员账户
+
+系统会创建一个默认管理员账户：
+
+- 用户名：Lnansy
+- 密码：password
+
+首次登录后请立即修改密码。
+
+### 内容发布
+
+1. 登录系统
+2. 在首页点击"发布文章"或"发布随笔"按钮
+3. 填写标题、内容和分类
+4. 点击发布
+
+### API接口
+
+系统提供了完整的REST API，详情可查看：
+
+- `/api/articles` - 文章和随笔相关
+- `/api/users` - 用户相关
+- `/api/stats` - 统计相关
+
+## 开发指南
+
+### 项目结构
+
+```
+|-- db/               # 数据库相关脚本
+|-- routes/           # API路由
+|-- js/               # 前端JavaScript
+|-- styles.css        # 样式表
+|-- index.html        # 首页
+|-- server.js         # 服务器入口
+|-- package.json      # 项目配置
+|-- README.md         # 项目说明
 ```
 
-## 目录结构
+### 主要实现
 
-```
-/
-|-- README.md           # 项目说明文档
-|-- server.js           # 服务器入口文件
-|-- models.js           # 数据库模型
-|-- package.json        # 项目依赖描述
-|-- .env                # 环境变量配置
-|-- index.html          # 网站首页
-|-- login.html          # 登录页面
-|-- register.html       # 注册页面
-|-- js/
-|   |-- api.js          # API接口适配器
-|   |-- archives.js     # 归档功能脚本
-|-- styles.css          # 全局样式
-```
-
-## 开发建议
-
-1. 数据库备份：定期备份MongoDB数据库
-2. 安全性：考虑添加JWT认证以增强安全性
-3. 图片上传：可以考虑集成云存储服务来处理文章图片上传
+- `server.js` - Express服务器和数据库连接
+- `db/init.js` - 数据库初始化
+- `routes/*.js` - API端点实现
+- `js/api.js` - 前端API调用模块
 
 ## 许可证
 
-[MIT](LICENSE) 
+MIT 
