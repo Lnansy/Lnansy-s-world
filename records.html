@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记录 - Lnansy's World</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: "KaiTi", "楷体", serif;
+            background: url('images/记录.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-size: 16px;
+        }
+        
+        .page-header {
+            text-align: center;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .page-header h1 {
+            font-family: "KaiTi", "楷体", serif;
+            color: #333;
+            font-size: 28px;
+        }
+
+        .card {
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .card-title {
+            font-family: "KaiTi", "楷体", serif;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .add-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .add-button:hover {
+            background: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .main-content {
+            padding-top: 80px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            margin: 20px;
+        }
+
+        .article-list, .essay-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .article-item, .essay-item {
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .article-item:last-child, .essay-item:last-child {
+            border-bottom: none;
+        }
+
+        .article-item:hover, .essay-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .article-title, .essay-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .article-meta, .essay-meta {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .article-excerpt, .essay-excerpt {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .article-footer, .essay-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .read-more {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .read-more:hover {
+            text-decoration: underline;
+        }
+
+        .article-stats, .essay-stats {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .article-stats span, .essay-stats span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .show-more {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .show-more-button {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 0 auto;
+        }
+
+        .show-more-button:hover {
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* 添加分类筛选样式 */
+        .filter-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .filter-button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            background: #f0f0f0;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .delete-button {
+            color: #dc3545;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+        }
+
+        .delete-button:hover {
+            opacity: 0.4;
+        }
+
+        .no-content {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+        }
+
+        /* 搜索栏样式 */
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .search-input {
+            width: 300px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+            width: 320px;
+        }
+
+        .search-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .search-button:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .search-results {
+            margin-top: 10px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .highlight {
+            background-color: rgba(255, 255, 0, 0.3);
+            padding: 2px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">Lnansy</div>
+            <div class="nav-links">
+                <a href="index.html">
+                    <i class="fas fa-home"></i>
+                    <span>首页</span>
+                </a>
+                <a href="records.html" class="active">
+                    <i class="fas fa-book"></i>
+                    <span>记录</span>
+                </a>
+                <a href="messages.html">
+                    <i class="fas fa-comment"></i>
+                    <span>留言</span>
+                </a>
+                <a href="music.html">
+                    <i class="fas fa-music"></i>
+                    <span>音乐</span>
+                </a>
+                <a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>关于我</span>
+                </a>
+                <div id="userSection">
+                    <!-- 用户登录状态将在这里动态添加 -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>记录</h1>
+        </div>
+        
+        <div class="content-wrapper">
+            <!-- 搜索栏 -->
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索文章和随笔...">
+                <button class="search-button" onclick="performSearch()">
+                    <i class="fas fa-search"></i>
+                    搜索
+                </button>
+            </div>
+            <div class="search-results" id="searchResults"></div>
+
+            <!-- 分类筛选按钮 -->
+            <div class="filter-options">
+                <button class="filter-button active" data-type="all">全部</button>
+                <button class="filter-button" data-type="essay">随笔</button>
+                <button class="filter-button" data-type="article">文章</button>
+            </div>
+
+            <!-- 随笔部分 -->
+            <div class="card" id="essaySection">
+                <h2 class="card-title">
+                    随笔
+                    <button class="add-button" id="addEssayBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </h2>
+                <div class="essay-list" id="essayList">
+                    <!-- 内容将通过JavaScript动态添加 -->
+        </div>
+    </div>
+
+            <!-- 文章部分 -->
+            <div class="card" id="articleSection">
+                <h2 class="card-title">
+                    文章
+                    <button class="add-button" id="addArticleBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </h2>
+                <div class="article-list" id="articleList">
+                    <!-- 内容将通过JavaScript动态添加 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部版权信息 -->
+    <footer>
+        <div class="footer-content">
+            <p>© 2025 Lnansy. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 检查用户登录状态
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+        const userSection = document.getElementById('userSection');
+
+        function updateUserSection() {
+            if (currentUser) {
+                userSection.innerHTML = `
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>${currentUser.username}</span>
+                        <div class="user-menu">
+                            <a href="#" class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>退出登录</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                // 添加登出功能
+                document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    window.location.reload();
+                });
+
+                // 添加用户菜单显示/隐藏功能
+                const userProfile = document.querySelector('.user-profile');
+                const userMenu = document.querySelector('.user-menu');
+
+                userProfile.addEventListener('click', () => {
+                    userMenu.classList.toggle('active');
+                });
+
+                // 点击其他地方关闭菜单
+                document.addEventListener('click', (e) => {
+                    if (!userProfile.contains(e.target)) {
+                        userMenu.classList.remove('active');
+                    }
+                });
+            } else {
+                userSection.innerHTML = `
+                    <a href="login.html" class="login-link">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>登录</span>
+                    </a>
+                `;
+            }
+        }
+
+        // 加载并显示内容
+        function loadContent(searchTerm = '') {
+            const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+            const essayList = document.getElementById('essayList');
+            const articleList = document.getElementById('articleList');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+            const searchResults = document.getElementById('searchResults');
+
+            // 清空现有内容
+            essayList.innerHTML = '';
+            articleList.innerHTML = '';
+            searchResults.innerHTML = '';
+
+            // 如果有搜索词，过滤内容
+            let filteredContent = publishedContent;
+            if (searchTerm) {
+                const searchLower = searchTerm.toLowerCase();
+                filteredContent = publishedContent.filter(item => 
+                    item.title.toLowerCase().includes(searchLower) ||
+                    item.content.toLowerCase().includes(searchLower) ||
+                    item.category.toLowerCase().includes(searchLower)
+                );
+                
+                // 显示搜索结果数量
+                searchResults.innerHTML = `找到 ${filteredContent.length} 条相关内容`;
+            }
+
+            if (filteredContent.length === 0) {
+                essayList.innerHTML = '<div class="no-content">暂无随笔</div>';
+                articleList.innerHTML = '<div class="no-content">暂无文章</div>';
+                if (searchTerm) {
+                    searchResults.innerHTML = '未找到相关内容';
+                }
+                return;
+            }
+
+            filteredContent.forEach(item => {
+                const highlightText = (text) => {
+                    if (!searchTerm) return text;
+                    const regex = new RegExp(searchTerm, 'gi');
+                    return text.replace(regex, match => `<span class="highlight">${match}</span>`);
+                };
+
+                const itemHtml = `
+                    <div class="${item.type}-item" data-category="${item.category}">
+                        <h3 class="${item.type}-title">
+                            ${highlightText(item.title)}
+                            ${currentUser.username === item.author ? 
+                                `<button class="delete-button" data-id="${item.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>` : 
+                                ''}
+                        </h3>
+                        <div class="${item.type}-meta">
+                            <span class="${item.type}-date">${new Date(item.date).toLocaleDateString()}</span>
+                            <span class="${item.type}-category">${highlightText(item.category)}</span>
+                            <span class="${item.type}-author">${item.author}</span>
+                        </div>
+                        <p class="${item.type}-excerpt">${highlightText(item.content.substring(0, 200))}...</p>
+                        <div class="${item.type}-footer">
+                            <a href="article.html?id=${item.id}" class="read-more">阅读全文</a>
+                            <div class="${item.type}-stats">
+                                <span><i class="far fa-eye"></i> 0</span>
+                                <span><i class="far fa-heart"></i> 0</span>
+                                <span><i class="far fa-comment"></i> 0</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                if (item.type === 'essay') {
+                    essayList.innerHTML += itemHtml;
+                } else {
+                    articleList.innerHTML += itemHtml;
+                }
+            });
+
+            // 添加删除功能
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    if (confirm('确定要删除这篇内容吗？')) {
+                        const id = e.currentTarget.dataset.id;
+                        let content = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+                        content = content.filter(item => item.id != id);
+                        localStorage.setItem('publishedContent', JSON.stringify(content));
+                        loadContent(); // 重新加载内容
+                    }
+                });
+            });
+        }
+
+        // 分类筛选功能
+        document.querySelectorAll('.filter-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // 更新按钮状态
+                document.querySelectorAll('.filter-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+
+                // 根据类型显示/隐藏内容
+                const type = button.dataset.type;
+                if (type === 'all') {
+                    document.getElementById('essaySection').style.display = 'block';
+                    document.getElementById('articleSection').style.display = 'block';
+                } else if (type === 'essay') {
+                    document.getElementById('essaySection').style.display = 'block';
+                    document.getElementById('articleSection').style.display = 'none';
+                } else {
+                    document.getElementById('essaySection').style.display = 'none';
+                    document.getElementById('articleSection').style.display = 'block';
+                }
+            });
+        });
+
+        // 搜索功能
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            loadContent(searchTerm);
+        }
+
+        // 添加搜索框回车事件监听
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUserSection();
+            loadContent();
+        });
+
+        // 添加按钮功能
+        const addEssayBtn = document.getElementById('addEssayBtn');
+        const addArticleBtn = document.getElementById('addArticleBtn');
+
+        addEssayBtn.addEventListener('click', () => {
+            window.location.href = 'editor.html?type=essay';
+        });
+
+        addArticleBtn.addEventListener('click', () => {
+            window.location.href = 'editor.html?type=article';
+        });
+    </script>
+</body>
+</html> 

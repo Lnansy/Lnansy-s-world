@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分类 - Lnansy's World</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .category-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .category-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .category-count {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .content-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .filter-button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            background: #f0f0f0;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .content-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .content-item {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .content-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .content-meta {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .content-excerpt {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .content-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .read-more {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .content-stats {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .no-content {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            background: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 添加模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            width: 50%;
+            max-height: 80vh;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-meta {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .modal-content-text {
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .modal-content-text img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">Lnansy</div>
+            <div class="nav-links">
+                <a href="index.html">
+                    <i class="fas fa-home"></i>
+                    <span>首页</span>
+                </a>
+                <a href="records.html">
+                    <i class="fas fa-book"></i>
+                    <span>记录</span>
+                </a>
+                <a href="messages.html">
+                    <i class="fas fa-comment"></i>
+                    <span>留言</span>
+                </a>
+                <a href="music.html">
+                    <i class="fas fa-music"></i>
+                    <span>音乐</span>
+                </a>
+                <a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>关于我</span>
+                </a>
+                <div id="userSection">
+                    <!-- 用户登录状态将在这里动态添加 -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <div class="category-header">
+                <h1 class="category-title">分类: <span id="categoryName"></span></h1>
+                <div class="category-count">共 <span id="contentCount">0</span> 篇内容</div>
+            </div>
+
+            <div class="filter-options">
+                <button class="filter-button active" data-type="all">全部</button>
+                <button class="filter-button" data-type="essay">随笔</button>
+                <button class="filter-button" data-type="article">文章</button>
+            </div>
+
+            <div class="content-list" id="contentList">
+                <!-- 内容将通过JavaScript动态添加 -->
+            </div>
+        </div>
+    </main>
+
+    <!-- 添加模态框HTML结构 -->
+    <div class="modal" id="articleModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="modal-title" id="modalTitle"></h2>
+            <div class="modal-meta" id="modalMeta"></div>
+            <div class="modal-content-text" id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // 获取URL参数
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // 加载分类内容
+        function loadCategoryContent() {
+            const tag = decodeURIComponent(getQueryParam('tag'));
+            const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+            const contentList = document.getElementById('contentList');
+            const categoryName = document.getElementById('categoryName');
+            const contentCount = document.getElementById('contentCount');
+
+            // 设置分类名称
+            categoryName.textContent = tag;
+
+            // 筛选包含该标签的内容
+            const filteredContent = publishedContent.filter(item => 
+                item.tags.includes(tag) || item.category === tag
+            );
+
+            // 更新内容数量
+            contentCount.textContent = filteredContent.length;
+
+            if (filteredContent.length === 0) {
+                contentList.innerHTML = '<div class="no-content">暂无相关内容</div>';
+                return;
+            }
+
+            // 显示筛选后的内容
+            displayContent(filteredContent);
+        }
+
+        // 显示内容
+        function displayContent(content) {
+            const contentList = document.getElementById('contentList');
+            contentList.innerHTML = '';
+
+            content.forEach(item => {
+                const contentHtml = `
+                    <div class="content-item" data-type="${item.type}">
+                        <h3 class="content-title">${item.title}</h3>
+                        <div class="content-meta">
+                            <span class="content-date">${new Date(item.date).toLocaleDateString()}</span>
+                            <span class="content-category">${item.category}</span>
+                            <span class="content-author">${item.author}</span>
+                        </div>
+                        <div class="tag-list">
+                            ${item.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                        <p class="content-excerpt">${item.content.substring(0, 200)}...</p>
+                        <div class="content-footer">
+                            <a href="#" class="read-more">阅读全文</a>
+                            <div class="content-stats">
+                                <span><i class="far fa-eye"></i> 0</span>
+                                <span><i class="far fa-comment"></i> 0</span>
+                                <span><i class="far fa-heart"></i> 0</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                contentList.innerHTML += contentHtml;
+            });
+        }
+
+        // 分类筛选功能
+        document.querySelectorAll('.filter-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.dataset.type;
+                const tag = decodeURIComponent(getQueryParam('tag'));
+                const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+
+                // 更新按钮状态
+                document.querySelectorAll('.filter-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+
+                // 筛选内容
+                let filteredContent = publishedContent.filter(item => 
+                    item.tags.includes(tag) || item.category === tag
+                );
+
+                if (type !== 'all') {
+                    filteredContent = filteredContent.filter(item => item.type === type);
+                }
+
+                // 更新显示
+                displayContent(filteredContent);
+                document.getElementById('contentCount').textContent = filteredContent.length;
+            });
+        });
+
+        // 检查用户登录状态
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+        const userSection = document.getElementById('userSection');
+
+        function updateUserSection() {
+            if (currentUser) {
+                userSection.innerHTML = `
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>${currentUser.username}</span>
+                        <div class="user-menu">
+                            <a href="#" class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>退出登录</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    window.location.reload();
+                });
+            } else {
+                userSection.innerHTML = `
+                    <a href="login.html" class="login-link">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>登录</span>
+                    </a>
+                `;
+            }
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCategoryContent();
+            updateUserSection();
+        });
+
+        // 添加模态框相关功能
+        const modal = document.getElementById('articleModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMeta = document.getElementById('modalMeta');
+        const modalContent = document.getElementById('modalContent');
+        const closeModal = document.querySelector('.close-modal');
+
+        // 关闭模态框
+        closeModal.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // 修改阅读全文链接的点击事件
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('read-more')) {
+                e.preventDefault();
+                const contentItem = e.target.closest('.content-item');
+                const title = contentItem.querySelector('.content-title').textContent;
+                const meta = contentItem.querySelector('.content-meta').innerHTML;
+                const content = contentItem.querySelector('.content-excerpt').textContent;
+                
+                // 获取完整内容
+                const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+                const fullContent = publishedContent.find(item => item.title === title);
+                
+                modalTitle.textContent = title;
+                modalMeta.innerHTML = meta;
+                modalContent.innerHTML = fullContent ? fullContent.content : content;
+                modal.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html> 

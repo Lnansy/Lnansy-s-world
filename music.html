@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐 - Lnansy's World</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: auto;
+        }
+
+        .music-page {
+            position: relative;
+            min-height: 100vh;
+            background: url('images/vae.jpg') no-repeat center 75%;
+            background-size: cover;
+            background-attachment: fixed;
+            overflow: hidden;
+        }
+        
+        .music-page::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .page-header {
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .page-header h1 {
+            font-size: 2.5rem;
+            color: #fff;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .page-header p {
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .music-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .music-player {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+        }
+
+        .playlist {
+            margin-top: 2rem;
+        }
+
+        .song-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #fff;
+        }
+
+        .song-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(10px);
+        }
+
+        .song-item.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .song-info {
+            flex: 1;
+            margin-left: 1rem;
+        }
+
+        .song-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .song-artist {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin: 0 1rem;
+            cursor: pointer;
+        }
+
+        .progress {
+            height: 100%;
+            background: #fff;
+            border-radius: 2px;
+        }
+
+        .time {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .current-song {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .current-song .song-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .current-song .song-artist {
+            font-size: 1rem;
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1),
+                        0 0 0 8px rgba(255, 255, 255, 0.1),
+                        0 0 30px rgba(255, 255, 255, 1);
+            animation: shooting 3s linear infinite;
+        }
+
+        @keyframes shooting {
+            0% {
+                transform: translateX(0) translateY(0) rotate(215deg);
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(1000px) translateY(-1000px) rotate(215deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">Lnansy</div>
+            <div class="nav-links">
+                <a href="index.html">
+                    <i class="fas fa-home"></i>
+                    <span>首页</span>
+                </a>
+                <a href="records.html">
+                    <i class="fas fa-book"></i>
+                    <span>记录</span>
+                </a>
+                <a href="messages.html">
+                    <i class="fas fa-comment"></i>
+                    <span>留言</span>
+                </a>
+                <a href="music.html" class="active">
+                    <i class="fas fa-music"></i>
+                    <span>音乐</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="music-page">
+        <div class="page-header">
+            <h1 style="font-family: KaiTi, '楷体', STKaiti, '华文楷体', serif; margin-bottom: 0.5rem;">音乐播放器</h1>
+            <p style="font-family: 'Ma Shan Zheng', cursive; font-size: 1.5em;">寻访长沙名医vae</p>
+        </div>
+        
+        <div class="music-container">
+            <div class="music-player">
+                <div class="current-song">
+                    <h2 class="song-title">歌曲名称</h2>
+                    <p class="song-artist">艺术家</p>
+                </div>
+                
+                <div class="controls">
+                    <button class="control-btn">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button class="control-btn play-btn">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button class="control-btn">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                    <span class="time">0:00 / 0:00</span>
+                </div>
+
+                <div class="playlist">
+                    <!-- 歌曲列表将在这里动态添加 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部版权信息 -->
+    <footer>
+        <div class="footer-content">
+            <p>© 2025 Lnansy. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 创建流星
+        function createShootingStar() {
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+            
+            // 随机位置
+            const startX = Math.random() * window.innerWidth;
+            const startY = Math.random() * window.innerHeight;
+            
+            star.style.left = startX + 'px';
+            star.style.top = startY + 'px';
+            
+            // 随机大小
+            const size = Math.random() * 3 + 2;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            
+            // 随机动画持续时间
+            const duration = Math.random() * 2 + 2;
+            star.style.animationDuration = duration + 's';
+            
+            document.querySelector('.music-page').appendChild(star);
+            
+            // 动画结束后移除
+            star.addEventListener('animationend', () => {
+                star.remove();
+            });
+        }
+
+        // 每1秒生成5个流星
+        setInterval(() => {
+            for (let i = 0; i < 5; i++) {
+                createShootingStar();
+            }
+        }, 1000);
+
+        // 音乐数据
+        const musicData = [
+            {
+                title: '清明雨上',
+                artist: '许嵩',
+                src: 'music/清明雨上-许嵩.flac'
+            },
+            {
+                title: '如果当时',
+                artist: '许嵩',
+                src: 'music/如果当时-许嵩.flac'
+            },
+            {
+                title: '天龙八部之宿敌',
+                artist: '许嵩',
+                src: 'music/天龙八部之宿敌-许嵩.flac'
+            },
+            {
+                title: '庞贝',
+                artist: '许嵩',
+                src: 'music/庞贝-许嵩.flac'
+            },
+            {
+                title: '城府',
+                artist: '许嵩',
+                src: 'music/城府-许嵩.flac'
+            },
+            {
+                title: '断桥残雪',
+                artist: '许嵩',
+                src: 'music/断桥残雪-许嵩.flac'
+            },
+            {
+                title: '灰色头像',
+                artist: '许嵩',
+                src: 'music/灰色头像-许嵩.flac'
+            },
+            {
+                title: '惊鸿一面',
+                artist: '许嵩&黄龄',
+                src: 'music/惊鸿一面-许嵩&黄龄.flac'
+            },
+            {
+                title: '庐州月',
+                artist: '许嵩',
+                src: 'music/庐州月-许嵩.flac'
+            },
+            {
+                title: '星座书上',
+                artist: '许嵩',
+                src: 'music/星座书上-许嵩.flac'
+            },
+            {
+                title: '燕归巢',
+                artist: '许嵩',
+                src: 'music/燕归巢-许嵩.flac'
+            }
+        ];
+
+        // 初始化音乐播放器
+        function initMusicPlayer() {
+            const playlist = document.querySelector('.playlist');
+            const currentSongTitle = document.querySelector('.current-song .song-title');
+            const currentSongArtist = document.querySelector('.current-song .song-artist');
+            const playBtn = document.querySelector('.play-btn');
+            const progressBar = document.querySelector('.progress-bar');
+            const progress = document.querySelector('.progress');
+            const timeDisplay = document.querySelector('.time');
+
+            let currentSongIndex = 0;
+            let isPlaying = false;
+            let audio = new Audio();
+
+            // 创建播放列表
+            musicData.forEach((song, index) => {
+                const songItem = document.createElement('div');
+                songItem.className = 'song-item';
+                songItem.innerHTML = `
+                    <i class="fas fa-music"></i>
+                    <div class="song-info">
+                        <div class="song-title">${song.title}</div>
+                        <div class="song-artist">${song.artist}</div>
+                    </div>
+                `;
+                playlist.appendChild(songItem);
+
+                // 点击歌曲切换
+                songItem.addEventListener('click', () => {
+                    window.location.href = `music-detail.html?id=${index}`;
+                });
+            });
+
+            // 加载歌曲
+            function loadSong(index) {
+                const song = musicData[index];
+                audio.src = song.src;
+                currentSongTitle.textContent = song.title;
+                currentSongArtist.textContent = song.artist;
+                
+                // 更新播放列表选中状态
+                document.querySelectorAll('.song-item').forEach((item, i) => {
+                    item.classList.toggle('active', i === index);
+                });
+            }
+
+            // 播放歌曲
+            function playSong() {
+                isPlaying = true;
+                audio.play();
+                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            }
+
+            // 暂停歌曲
+            function pauseSong() {
+                isPlaying = false;
+                audio.pause();
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+
+            // 播放/暂停按钮点击事件
+            playBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    pauseSong();
+                } else {
+                    playSong();
+                }
+            });
+
+            // 更新进度条
+            audio.addEventListener('timeupdate', () => {
+                const progressPercent = (audio.currentTime / audio.duration) * 100;
+                progress.style.width = `${progressPercent}%`;
+
+                // 更新时间显示
+                const currentMinutes = Math.floor(audio.currentTime / 60);
+                const currentSeconds = Math.floor(audio.currentTime % 60);
+                const durationMinutes = Math.floor(audio.duration / 60);
+                const durationSeconds = Math.floor(audio.duration % 60);
+                timeDisplay.textContent = `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} / ${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
+            });
+
+            // 点击进度条跳转
+            progressBar.addEventListener('click', (e) => {
+                const progressPercent = (e.offsetX / progressBar.offsetWidth);
+                audio.currentTime = progressPercent * audio.duration;
+            });
+
+            // 歌曲结束自动播放下一首
+            audio.addEventListener('ended', () => {
+                currentSongIndex = (currentSongIndex + 1) % musicData.length;
+                loadSong(currentSongIndex);
+                playSong();
+            });
+
+            // 加载第一首歌
+            loadSong(currentSongIndex);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initMusicPlayer);
+
+        // 初始化音乐列表
+        function initMusicList() {
+            const musicList = document.querySelector('.music-list');
+            musicData.forEach((music, index) => {
+                const songItem = document.createElement('div');
+                songItem.className = 'song-item';
+                songItem.innerHTML = `
+                    <div class="song-info">
+                        <div class="song-title">${music.title}</div>
+                        <div class="song-artist">${music.artist}</div>
+                    </div>
+                    <div class="song-duration">${music.duration}</div>
+                `;
+                
+                // 点击歌曲跳转到详情页
+                songItem.addEventListener('click', () => {
+                    window.location.href = `music-detail.html?id=${index}`;
+                });
+                
+                musicList.appendChild(songItem);
+            });
+        }
+    </script>
+</body>
+</html> 

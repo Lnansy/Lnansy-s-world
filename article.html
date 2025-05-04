@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章详情 - Lnansy's World</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: url('images/随笔.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .article-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: rgba(255,255,255,0.85);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .article-header {
+            margin-bottom: 30px;
+        }
+
+        .article-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .article-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .delete-btn {
+            margin-left: auto;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .article-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #444;
+            margin-bottom: 30px;
+        }
+
+        .article-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            padding: 20px 0;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 30px;
+        }
+
+        .action-button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .action-button:hover {
+            background: rgba(0,123,255,0.1);
+            color: #007bff;
+        }
+
+        .like-button.liked {
+            color: #ff4757;
+        }
+
+        .like-button.liked i {
+            animation: likeAnimation 0.3s ease;
+        }
+
+        @keyframes likeAnimation {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .comments-section {
+            margin-top: 40px;
+        }
+
+        .comments-header {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .comment {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .comment-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .comment-content {
+            color: #444;
+            line-height: 1.6;
+        }
+
+        .comment-form {
+            margin-top: 30px;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .comment-form button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .comment-form button:hover {
+            background: #0056b3;
+        }
+
+        .owner-comment {
+            background: #f0f7ff;
+            border-left: 3px solid #007bff;
+        }
+
+        .owner-badge {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            text-decoration: none;
+            margin-bottom: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(0,0,0,0.05);
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">Lnansy</div>
+            <div class="nav-links">
+                <a href="index.html">
+                    <i class="fas fa-home"></i>
+                    <span>首页</span>
+                </a>
+                <a href="records.html">
+                    <i class="fas fa-book"></i>
+                    <span>记录</span>
+                </a>
+                <a href="messages.html">
+                    <i class="fas fa-comment"></i>
+                    <span>留言</span>
+                </a>
+                <a href="music.html">
+                    <i class="fas fa-music"></i>
+                    <span>音乐</span>
+                </a>
+                <a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>关于我</span>
+                </a>
+                <div id="userSection">
+                    <!-- 用户登录状态将在这里动态添加 -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="article-container">
+            <a href="javascript:history.back()" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+                <span>返回</span>
+            </a>
+            <article id="articleContent">
+                <!-- 文章内容将通过 JavaScript 动态加载 -->
+            </article>
+        </div>
+    </main>
+
+    <script>
+        // 全局声明currentUser，避免作用域问题
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+        document.addEventListener('DOMContentLoaded', () => {
+            const articleId = new URLSearchParams(window.location.search).get('id');
+            
+            if (!articleId) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 加载文章内容
+            loadArticle(articleId);
+
+            // 更新用户状态
+            updateUserSection();
+        });
+
+        function loadArticle(articleId) {
+            const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+            const article = publishedContent.find(item => String(item.id) === String(articleId));
+            const articleContentNode = document.getElementById('articleContent');
+            
+            if (!articleContentNode) return;
+            
+            if (!article) {
+                articleContentNode.innerHTML = '<p class="error">文章不存在或已被删除</p>';
+                return;
+            }
+
+            const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
+            const articleInteractions = interactions[articleId] || { views: 0, likes: [], comments: [] };
+            const isLiked = currentUser && articleInteractions.likes.includes(currentUser.username);
+
+            // 更新浏览量
+            if (!articleInteractions.views) articleInteractions.views = 0;
+            articleInteractions.views += 1;
+            interactions[articleId] = articleInteractions;
+            localStorage.setItem('contentInteractions', JSON.stringify(interactions));
+
+            // 附件兼容处理
+            let attachmentsArr = [];
+            if (Array.isArray(article.attachments)) {
+                attachmentsArr = article.attachments;
+            } else if (typeof article.attachments === 'string') {
+                try {
+                    attachmentsArr = JSON.parse(article.attachments);
+                } catch (e) {
+                    attachmentsArr = [];
+                }
+            }
+
+            const articleHtml = `
+                <header class="article-header">
+                    <h1 class="article-title">${article.title}</h1>
+                    <div class="article-meta">
+                        <span><i class="far fa-calendar"></i> ${new Date(article.date).toLocaleDateString()}</span>
+                        <span><i class="far fa-user"></i> ${article.author}</span>
+                        <span><i class="far fa-eye"></i> ${articleInteractions.views} 次浏览</span>
+                        ${currentUser.username === article.author ? `
+                            <button onclick="deleteArticle('${article.id}')" class="delete-btn">
+                                <i class="fas fa-trash"></i>
+                                <span>删除</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                </header>
+                <div class="article-content">
+                    ${article.content || '<p style="color:#888">暂无正文内容</p>'}
+                </div>
+                ${attachmentsArr.length > 0 ? `
+                <div class="article-attachments" style="margin: 20px 0;">
+                    <strong>附件下载：</strong>
+                    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                        ${attachmentsArr.map(att => `
+                            <li><a href="${att.data}" download="${att.name}">${att.name}</a></li>
+                        `).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                <div class="article-actions">
+                    <button class="action-button like-button ${isLiked ? 'liked' : ''}" onclick="handleLike('${article.id}')">
+                        <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
+                        <span>${articleInteractions.likes.length}</span>
+                    </button>
+                    <button class="action-button comment-button" onclick="focusCommentForm()">
+                        <i class="far fa-comment"></i>
+                        <span>${articleInteractions.comments.length}</span>
+                    </button>
+                </div>
+                <div class="comments-section">
+                    <h3 class="comments-header">评论 (${articleInteractions.comments.length})</h3>
+                    <div class="comments-list">
+                        ${articleInteractions.comments.map(comment => `
+                            <div class="comment ${comment.isOwner ? 'owner-comment' : ''}">
+                                <div class="comment-header">
+                                    <span class="comment-author">
+                                        ${comment.userId}
+                                        ${comment.isOwner ? '<span class="owner-badge">博主</span>' : ''}
+                                    </span>
+                                    <span class="comment-date">${new Date(comment.timestamp).toLocaleString()}</span>
+                                </div>
+                                <div class="comment-content">${comment.content}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="comment-form">
+                        <textarea placeholder="写下你的评论..." id="commentInput"></textarea>
+                        <button onclick="submitComment('${article.id}')">发表评论</button>
+                    </div>
+                </div>
+            `;
+            articleContentNode.innerHTML = articleHtml;
+            document.title = `${article.title} - Lnansy's World`;
+        }
+
+        // 删除文章的函数
+        async function deleteArticle(articleId) {
+            if (!currentUser || currentUser.username === '访客') {
+                alert('只有博主本人才能删除文章！');
+                return;
+            }
+
+            const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+            const article = publishedContent.find(item => String(item.id) === String(articleId));
+            
+            if (!article || currentUser.username !== article.author) {
+                alert('你没有权限删除这篇文章！');
+                return;
+            }
+
+            if (confirm('确定要删除这篇文章吗？此操作不可恢复！')) {
+                // 删除文章
+                const newPublishedContent = publishedContent.filter(item => String(item.id) !== String(articleId));
+                localStorage.setItem('publishedContent', JSON.stringify(newPublishedContent));
+
+                // 删除相关的互动数据
+                const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
+                delete interactions[articleId];
+                localStorage.setItem('contentInteractions', JSON.stringify(interactions));
+
+                alert('文章已成功删除！');
+                window.location.href = 'index.html';  // 删除后返回首页
+            }
+        }
+
+        async function handleLike(articleId) {
+            if (!currentUser || currentUser.username === '访客') {
+                alert('请先登录后再点赞！');
+                return;
+            }
+
+            const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
+            if (!interactions[articleId]) {
+                interactions[articleId] = { views: 0, likes: [], comments: [] };
+            }
+
+            const likes = new Set(interactions[articleId].likes);
+            if (likes.has(currentUser.username)) {
+                likes.delete(currentUser.username);
+            } else {
+                likes.add(currentUser.username);
+            }
+
+            interactions[articleId].likes = Array.from(likes);
+            localStorage.setItem('contentInteractions', JSON.stringify(interactions));
+
+            // 更新页面显示
+            const likeButton = document.querySelector('.like-button');
+            const likeCount = likeButton.querySelector('span');
+            likeButton.classList.toggle('liked');
+            const isLiked = likeButton.classList.contains('liked');
+            likeButton.querySelector('i').className = `fa${isLiked ? 's' : 'r'} fa-heart`;
+            likeCount.textContent = interactions[articleId].likes.length;
+        }
+
+        function focusCommentForm() {
+            document.getElementById('commentInput').focus();
+        }
+
+        async function submitComment(articleId) {
+            if (!currentUser || currentUser.username === '访客') {
+                alert('请先登录后再评论！');
+                return;
+            }
+
+            const commentInput = document.getElementById('commentInput');
+            const comment = commentInput.value.trim();
+
+            if (!comment) {
+                alert('评论内容不能为空！');
+                return;
+            }
+
+            const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
+            if (!interactions[articleId]) {
+                interactions[articleId] = { views: 0, likes: [], comments: [] };
+            }
+
+            const newComment = {
+                id: Date.now(),
+                userId: currentUser.username,
+                content: comment,
+                timestamp: Date.now(),
+                isOwner: true // 标记为博主评论
+            };
+
+            interactions[articleId].comments.push(newComment);
+            localStorage.setItem('contentInteractions', JSON.stringify(interactions));
+
+            // 重新加载文章以显示新评论
+            loadArticle(articleId);
+            commentInput.value = ''; // 清空评论框
+        }
+
+        function updateUserSection() {
+            const userSection = document.getElementById('userSection');
+            if (currentUser && currentUser.username !== '访客') {
+                userSection.innerHTML = `
+                    <span class="user-info">
+                        <i class="fas fa-user"></i>
+                        ${currentUser.username}
+                    </span>
+                    <a href="#" onclick="logout()">退出</a>
+                `;
+            } else {
+                userSection.innerHTML = `
+                    <a href="login.html">登录</a>
+                `;
+            }
+        }
+
+        function logout() {
+            localStorage.setItem('currentUser', JSON.stringify({ username: '访客' }));
+            window.location.reload();
+        }
+    </script>
+</body>
+</html> 

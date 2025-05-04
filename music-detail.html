@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐详情 - Lnansy's World</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: auto;
+        }
+
+        .music-detail-page {
+            position: relative;
+            min-height: 100vh;
+            background: url('images/vae3.jpg') no-repeat 20% center;
+            background-size: cover;
+            background-attachment: fixed;
+            overflow: hidden;
+        }
+        
+        .music-detail-page::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1;
+        }
+
+        .music-detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .music-info {
+            background: transparent;
+            padding: 0;
+        }
+
+        .music-cover {
+            display: none;
+        }
+
+        .music-title {
+            font-size: 2rem;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .music-artist {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+        }
+
+        .lyrics-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .lyrics {
+            color: #fff;
+            line-height: 2;
+            text-align: center;
+            font-size: 1.2em;
+            white-space: pre-line;
+            font-family: KaiTi, "楷体", STKaiti, "华文楷体", serif;
+        }
+
+        .lyrics .active {
+            color: #ffcc00;
+        }
+
+        .comments-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comments-title {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .comment-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .comment-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            color: #fff;
+        }
+
+        .comment-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .comment-submit {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .comments-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .comment {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .comment-author {
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-content {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-time {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+        }
+
+        .delete-comment {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255, 0, 0, 0.2);
+            color: #fff;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background-color 0.2s;
+        }
+
+        .delete-comment:hover {
+            background: rgba(255, 0, 0, 0.4);
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .comment-input:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+        }
+
+        .comment-submit:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .player-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            z-index: 3;
+        }
+
+        .control-btn {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .progress-container {
+            flex: 1;
+            max-width: 500px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: #007bff;
+            border-radius: 2px;
+        }
+
+        .time-display {
+            color: #fff;
+            font-size: 0.9rem;
+            min-width: 100px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">Lnansy</div>
+            <div class="nav-links">
+                <a href="index.html">
+                    <i class="fas fa-home"></i>
+                    <span>首页</span>
+                </a>
+                <a href="records.html">
+                    <i class="fas fa-book"></i>
+                    <span>记录</span>
+                </a>
+                <a href="messages.html">
+                    <i class="fas fa-comment"></i>
+                    <span>留言</span>
+                </a>
+                <a href="music.html">
+                    <i class="fas fa-music"></i>
+                    <span>音乐</span>
+                </a>
+                <img src="images/头像.jpg" alt="头像" class="nav-avatar" style="width:32px;height:32px;border-radius:50%;margin-left:16px;vertical-align:middle;">
+            </div>
+        </div>
+    </nav>
+
+    <div class="music-detail-page">
+        <div class="music-detail-container">
+            <div class="music-info">
+                <div class="music-cover">
+                    <i class="fas fa-music"></i>
+                </div>
+                <h1 class="music-title">歌曲名称</h1>
+                <p class="music-artist">艺术家</p>
+                <div class="lyrics-container">
+                    <div class="lyrics">
+                        <!-- 歌词将在这里动态添加 -->
+                    </div>
+                </div>
+            </div>
+            <div class="comments-section">
+                <h2 class="comments-title">评论</h2>
+                <div class="comment-form">
+                    <input type="text" class="comment-input" placeholder="写下你的评论...">
+                    <button class="comment-submit">发表</button>
+                </div>
+                <div class="comments-list">
+                    <!-- 评论将在这里动态添加 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="player-controls">
+        <button class="control-btn">
+            <i class="fas fa-step-backward"></i>
+        </button>
+        <button class="control-btn play-btn">
+            <i class="fas fa-play"></i>
+        </button>
+        <button class="control-btn">
+            <i class="fas fa-step-forward"></i>
+        </button>
+        <div class="progress-container">
+            <div class="progress">
+                <div class="progress-handle"></div>
+            </div>
+        </div>
+        <div class="time-display">0:00 / 0:00</div>
+    </div>
+
+    <script>
+        // 从URL获取音乐ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const musicId = urlParams.get('id');
+
+        // 音乐数据
+        const musicData = [
+            {
+                id: 0,
+                title: '清明雨上',
+                artist: '许嵩',
+                src: 'music/清明雨上-许嵩.flac',
+                lyrics: `窗透初晓 日照西桥 云自摇
+想你当年荷风微摆的衣角
+木雕流金 岁月涟漪 七年前封笔
+因为我今生挥毫只为你
+
+雨打湿了眼眶 年年倚井盼归堂
+最怕不觉泪已拆两行
+我在人间彷徨 寻不到你的天堂
+东瓶西镜放 恨不能遗忘
+
+又是清明雨上 折菊寄到你身旁
+把你最爱的歌来轻轻唱
+远方有琴 愀然空灵 声声催天雨
+涓涓心事说给自己听
+
+月影憧憧 烟火几重 烛花红
+红尘旧梦 梦断都成空
+
+雨打湿了眼眶 年年倚井盼归堂
+最怕不觉泪已拆两行
+我在人间彷徨 寻不到你的天堂
+东瓶西镜放 恨不能遗忘
+
+又是清明雨上 折菊寄到你身旁
+把你最爱的歌来轻轻唱
+我在人间彷徨 寻不到你的天堂
+东瓶西镜放 恨不能遗忘
+又是清明雨上 折菊寄到你身旁
+把你最爱的歌来轻轻唱`
+            },
+            {
+                id: 1,
+                title: '如果当时',
+                artist: '许嵩',
+                src: 'music/如果当时-许嵩.flac',
+                lyrics: `为什么 你当时对我好
+又为什么 现在变得冷淡了
+我知道 爱要走难阻挠
+反正不是我的 我也不该要
+你和我 曾经有共同爱好
+谁的耳边 总有绝句在萦绕
+我们俩 用文言文对话真的很搞笑
+还笑那曹操贪慕着小乔
+天灰了 雨坠了
+视线要模糊了
+此时感觉到你的重要
+爱走了 心走了
+你说你要走了
+我为你唱最后的古谣
+红雨瓢泼泛起了回忆怎么潜
+你美目如当年 流转我心间
+渡口边最后一面洒下了句点
+与你若只如初见 何须感伤离别
+你和我 曾经有共同爱好
+谁的耳边 总有绝句在萦绕
+我们俩 用文言文对话真的很搞笑
+还笑那曹操贪慕着小乔
+天灰了 雨坠了
+视线要模糊了
+此时感觉到你的重要
+爱走了 心走了
+你说你要走了
+我为你唱最后的古谣
+红雨瓢泼泛起了回忆怎么潜
+你美目如当年 流转我心间
+渡口边最后一面洒下了句点
+与你若只如初见 何须感伤离别
+红雨瓢泼泛起了回忆怎么潜
+你美目如当年 流转我心间
+渡口边最后一面洒下了句点
+与你若只如初见 何须感伤离别
+红雨瓢泼泛起了回忆怎么潜
+你美目如当年 流转我心间
+渡口边最后一面洒下了句点
+与你若只如初见 何须感伤离别`
+            },
+            {
+                id: 2,
+                title: '天龙八部之宿敌',
+                artist: '许嵩',
+                src: 'music/天龙八部之宿敌-许嵩.flac',
+                lyrics: `会在何处见到你 莫非前尘已注定
+飞过时空的距离 却囿于刀剑光影
+三月春花渐次醒 迢迢年华谁老去
+是劫是缘随我心 除了你万敌不侵
+
+当恩怨各一半 我怎么圈揽
+看灯笼血红染 寻仇已太晚
+月下门童喟叹 昨夜太平长安
+
+当天上星河转 我命已定盘
+待绝笔墨痕干 宿敌已来犯
+我借你的孤单 今生恐怕难还
+
+缠扰孤岛的雪雨 飘飘洒洒谁来停
+摘取一颗海上星 陪我终夜不孤寂
+灵柩长埋深谷底 没有永远的秘密
+染指江湖结悲局 无人逃得过宿命
+
+当恩怨各一半 我怎么圈揽
+看灯笼血红染 寻仇已太晚
+月下门童喟叹 昨夜太平长安
+
+当天上星河转 我命已定盘
+待绝笔墨痕干 宿敌已来犯
+我借你的孤单 今生恐怕难还
+
+当恩怨各一半 我怎么圈揽
+看灯笼血红染 寻仇已太晚
+月下门童喟叹 昨夜太平长安
+
+当天上星河转 我命已定盘
+待绝笔墨痕干 宿敌已来犯
+我借你的孤单 今生恐怕难还`
+            },
+            {
+                id: 3,
+                title: '庞贝',
+                artist: '许嵩',
+                src: 'music/庞贝-许嵩.flac',
+                lyrics: `如果火山喷发是灾难还是壮美
+静静看着你就好像没想过防卫
+崩塌的瞬间我还攥着新鲜玫瑰
+在掌纹中间划开一道事与愿违
+那些远去的事没有人会再提起
+昨夜的梦里你面目难辨得无稽
+我奋力说话可惜被压住了声音
+你说时间到了就要辞行
+如果有天兜兜转转再一次相遇
+我一定会不顾一切紧紧抱着你
+启程回到人物饱满
+情节丰沛我们的堡垒
+你说回不去了你在庞贝
+你不要忘了我也在庞贝
+那些远去的事没有人会再提起
+昨夜的梦里你面目难辨得无稽
+我奋力说话可惜被压住了声音
+你说时间到了就要辞行
+如果有天兜兜转转再一次相遇
+我一定会不顾一切紧紧抱着你
+启程回到人物饱满
+情节丰沛我们的堡垒
+你说回不去了你在庞贝
+如果有天兜兜转转再一次相遇
+我一定会不顾一切紧紧抱着你
+启程回到人物饱满
+情节丰沛我们的堡垒
+你说回不去了你在庞贝
+你不要忘了我也在庞贝`
+            },
+            {
+                id: 4,
+                title: '城府',
+                artist: '许嵩',
+                src: 'music/城府-许嵩.flac',
+                lyrics: `你走之后 一个夏季熬成一个秋
+我的书上你的正楷眉清目秀
+一字一字宣告我们和平分手
+好委婉的交流 还带一点征求
+你已成风 幻化的雨下错了季候
+明媚的眼眸里温柔化为了乌有
+一层一层院墙把你的心困守
+如果没法回头 这样也没不妥
+你的城府有多深
+我爱的有多蠢 是我太笨
+还是太认真 幻想和你过一生
+你的城府有多深
+我爱的有多蠢 不想再问
+也无法去恨 毕竟你是我最爱的人
+曾经你的眼神 看起来那么单纯
+嗯 指向你干净的灵魂
+什么时候开始变得满是伤痕
+戴上假面也好 如果不会疼
+爱情这个世界 有那么多的悖论
+小心翼翼不见得就会获得满分
+我们之间缺少了那么多信任
+最后还是没有打开那扇心门
+你的城府有多深
+我爱的有多蠢 是我太笨
+还是太认真 幻想和你过一生
+你的城府有多深
+我爱的有多蠢 不想再问
+也无法去恨 毕竟你是我最爱的人
+我曾经苦笑着问过我自己
+在我身边的是否只是一个面具
+笑我傻的人 何必要来安慰
+不如把故事当作传说听完就忘了
+你的城府有多深
+我爱的有多蠢 是我太笨
+还是太认真 幻想和你过一生
+你的城府有多深
+我爱的有多蠢 不想再问
+也无法去恨 毕竟你是我最爱的人
+你的城府有多深
+我爱的有多蠢 是我太笨
+还是太认真 幻想和你过一生
+你的城府有多深
+我爱的有多蠢 不想再问
+也无法去恨 毕竟你是我最爱的人
+我曾经苦笑着问过我自己
+在我身边的是否只是一个面具
+笑我傻的人 何必要来安慰
+不如把故事当作传说听完就忘了`
+            },
+            {
+                id: 5,
+                title: '断桥残雪',
+                artist: '许嵩',
+                src: 'music/断桥残雪-许嵩.flac',
+                lyrics: `寻不到花的折翼枯叶蝶
+永远也看不见凋谢
+江南夜色下的小桥屋檐
+读不懂塞北的荒野
+梅开时节因寂寞而缠绵
+春归后又很快湮灭
+独留我赏烟花飞满天
+摇曳后就随风飘远
+断桥残雪 我思恋你容颜
+若是无缘再见 白堤柳帘垂泪好几遍
+寻不到花的折翼枯叶蝶
+永远也看不见凋谢
+江南夜色下的小桥屋檐
+读不懂塞北的荒野
+梅开时节因寂寞而缠绵
+春归后又很快湮灭
+独留我赏烟花飞满天
+摇曳后就随风飘远
+断桥残雪 我思恋你容颜
+若是无缘再见 白堤柳帘垂泪好几遍
+断桥残雪 我思恋你容颜
+若是无缘再见 白堤柳帘垂泪好几遍
+断桥残雪 我思恋你容颜
+若是无缘再见 白堤柳帘垂泪好几遍
+断桥残雪 我思恋你容颜
+若是无缘再见 白堤柳帘垂泪好几遍
+断桥残雪 我思恋你容颜
+若是无缘再见 白堤柳帘垂泪好几遍
+断桥残雪 我思恋你容颜
+若是无缘再见 白堤柳帘垂泪好几遍
+寻不到花的折翼枯叶蝶
+永远也看不见凋谢
+江南夜色下的小桥屋檐
+读不懂塞北的荒野
+梅开时节因寂寞而缠绵
+春归后又很快湮灭
+独留我赏烟花飞满天
+摇曳后就随风飘远
+断桥残雪 我思恋你容颜
+若是无缘再见 白堤柳帘垂泪好几遍
+断桥残雪 我思恋你容颜
+若是无缘再见 白堤柳帘垂泪好几遍
+断桥残雪 我思恋你容颜
+若是无缘再见 白堤柳帘垂泪好几遍`
+            },
+            {
+                id: 6,
+                title: '灰色头像',
+                artist: '许嵩',
+                src: 'music/灰色头像-许嵩.flac',
+                lyrics: `昨夜做了一个梦
+梦里我们回到手牵着手
+醒来的失落 无法言说
+打开了OICQ
+聊天记录停步去年的深秋
+最后的挽留 没有说出口
+我们还是朋友
+是那种最遥远的朋友
+你给过的温柔 在记录之中
+全部都保有
+你灰色头像不会再跳动
+哪怕是一句简单的问候
+心贴心的交流一页页翻过
+是什么坠落 升空
+又想起你曾说的陪我到最后
+暖色的梦变冰凉的枷锁
+如果时光倒流 我们又能抓得住什么
+打开了OICQ
+聊天记录停步去年的深秋
+最后的挽留 没有说出口
+我们还是朋友
+是那种最遥远的朋友
+你给过的温柔 在记录之中
+全部都保有
+你灰色头像不会再跳动
+哪怕是一句简单的问候
+心贴心的交流一页页翻过
+是什么坠落 升空
+又想起你曾说的陪我到最后
+暖色的梦变冰凉的枷锁
+如果时光倒流 我们又能抓得住什么
+你灰色头像不会再跳动
+哪怕是一句简单的问候
+心贴心的交流一页页翻过
+是什么坠落 升空
+又想起你曾说的陪我到最后
+暖色的梦变冰凉的枷锁
+如果时光倒流 我们又能抓得住什么
+你灰色头像不会再跳动
+哪怕是一句简单的问候
+心贴心的交流一页页翻过
+是什么坠落 升空
+又想起你曾说的陪我到最后
+暖色的梦变冰凉的枷锁
+如果时光倒流 我们又能抓得住什么
+心贴心的交流一页页翻过
+是什么坠落 升空
+又想起你曾说的陪我到最后
+暖色的梦变冰凉的枷锁
+如果时光倒流 我们又能抓得住什么
+你灰色头像不会再跳动
+哪怕是一句简单的问候
+心贴心的交流一页页翻过
+是什么坠落 升空
+又想起你曾说的陪我到最后
+暖色的梦变冰凉的枷锁
+如果时光倒流 我们又能抓得住什么`
+            },
+            {
+                id: 7,
+                title: '惊鸿一面',
+                artist: '许嵩&黄龄',
+                src: 'music/惊鸿一面-许嵩&黄龄.flac',
+                lyrics: `翻手为云 覆手为雨
+金盆洗手 止风雨
+不恋红尘 却难舍回忆
+每一段都有你
+年少初遇 常在我心
+多年不减 你深情
+江山如画 又怎能比拟
+你送我的风景
+柳下闻瑶琴 起舞和一曲
+仿佛映当年 翩若惊鸿影
+谁三言两语 撩拨了情意
+谁一颦一笑 摇曳了星云
+纸扇藏伏笔 玄机诗文里
+紫烟燃心语 留香候人寻
+史书列豪杰 功过有几许
+我今生何求 惟你
+年少初遇 常在我心
+多年不减 你深情
+江山如画 又怎能比拟
+你送我的风景
+柳下闻瑶琴 起舞和一曲
+仿佛映当年 翩若惊鸿影
+谁三言两语 撩拨了情意
+谁一颦一笑 摇曳了星云
+纸扇藏伏笔 玄机诗文里
+紫烟燃心语 留香候人寻
+史书列豪杰 功过有几许
+我今生何求 惟你
+远山传来清晨悠然的曲笛
+晓风掠走光阴
+残月沉霜鬓里
+有了你
+恩怨都似飞鸿踏雪泥
+柳下闻瑶琴 起舞和一曲
+仿佛映当年 翩若惊鸿影
+谁三言两语 撩拨了情意
+谁一颦一笑 摇曳了星云
+纸扇藏伏笔 玄机诗文里
+紫烟燃心语 留香候人寻
+史书列豪杰 功过有几许
+我今生何求 惟你
+我今生何求 惟你`
+            },
+            {
+                id: 8,
+                title: '庐州月',
+                artist: '许嵩',
+                src: 'music/庐州月-许嵩.flac',
+                lyrics: `儿时凿壁 偷了谁家的光
+宿昔不梳 一苦十年寒窗
+如今灯下闲读 红袖添香
+半生浮名 只是虚妄
+三月 一路烟霞 莺飞草长
+柳絮纷飞里 看见了故乡
+不知心上的你 是否还在庐阳
+一缕青丝 一生珍藏
+桥上的恋人 入对出双
+桥边红药 叹夜太漫长
+月也摇晃 人也彷徨
+乌篷里传来了 一曲离殇
+庐州月光 洒在心上
+月下的你 不复当年模样
+太多的伤 难诉衷肠
+叹一句 当时只道是寻常
+庐州月光 梨花雨凉
+如今的你 又在谁的身旁
+家乡月光 深深烙在我心上
+却流不出 当年泪光
+三月 一路烟霞 莺飞草长
+柳絮纷飞里 看见了故乡
+不知心上的你 是否还在庐阳
+一缕青丝 一生珍藏
+桥上的恋人 入对出双
+桥边红药 叹夜太漫长
+月也摇晃 人也彷徨
+乌篷里传来了 一曲离殇
+庐州月光 洒在心上
+月下的你 不复当年模样
+太多的伤 难诉衷肠
+叹一句 当时只道是寻常
+庐州月光 梨花雨凉
+如今的你 又在谁的身旁
+家乡月光 深深烙在我心上
+却流不出 当年泪光
+庐州的月光 在我心上
+太多的伤口 难诉衷肠
+如今的你 在谁的身旁
+我流不出 当年泪光
+庐州月光 洒在心上
+月下的你 不复当年模样
+太多的伤 难诉衷肠
+叹一句 当时只道是寻常
+庐州月光 梨花雨凉
+如今的你 又在谁的身旁
+家乡月光 深深烙在我心上
+却流不出 当年泪光`
+            },
+            {
+                id: 9,
+                title: '星座书上',
+                artist: '许嵩',
+                src: 'music/星座书上-许嵩.flac',
+                lyrics: `星光点亮了 海水泛起皱褶
+晚风咸咸的 吹散你我身旁余热
+不够彼此信任 还是有了裂痕
+为什么感觉有些陌生了
+昨天晚上 跟你一起看 星座书上
+曾说过 如果没有回航
+明天夜空 会有很多闪烁的光
+到时候 把流放的心情 慢慢释放
+星光点亮了 海水泛起皱褶
+晚风咸咸的 吹散你我身旁余热
+不够彼此信任 还是有了裂痕
+为什么感觉有些陌生了
+昨天晚上 跟你一起看 星座书上
+曾说过 如果没有回航
+明天夜空 会有很多闪烁的光
+到时候 把流放的心情 慢慢释放
+你在等 一个夜晚
+同时抱住两个人的温暖
+一个是在 身体上 留下记号
+一个是在 心灵上 留下记号
+昨天晚上 跟你一起看 星座书上
+曾说过 如果没有回航
+明天夜空 会有很多闪烁的光
+到时候 把流放的心情 慢慢释放
+昨天晚上 跟你一起看 星座书上
+曾说过 如果没有回航
+明天夜空 会有很多闪烁的光
+到时候 把流放的心情 慢慢释放
+昨天晚上 跟你一起看 星座书上
+曾说过 如果没有回航
+明天夜空 会有很多闪烁的光
+到时候 把流放的心情 慢慢释放
+昨天晚上 跟你一起看 星座书上
+曾说过 如果没有回航
+明天夜空 会有很多闪烁的光
+到时候 把流放的心情 慢慢释放`
+            },
+            {
+                id: 10,
+                title: '燕归巢',
+                artist: '许嵩',
+                src: 'music/燕归巢-许嵩.flac',
+                lyrics: `雨后江岸天破晓
+老舟新客知多少
+远山见竹林芳草
+晨风抚绿了芭蕉
+寒梅落尽把冬了
+衔春的燕想归巢
+沿途的景 牵挂的人
+两情迢迢
+柳叶桨溅桃花浪
+汀州里鹤眺远方
+饮一盏岁月留香
+唱一曲往事飞扬
+山水间歌声回荡
+回荡思念的滚烫
+去年的家书两行
+读来又热了眼眶
+云水边静沐暖阳
+烟波里久违的故乡
+别来无恙
+你在心上
+雨后江岸天破晓
+老舟新客知多少
+远山见竹林芳草
+晨风抚绿了芭蕉
+寒梅落尽把冬了
+衔春的燕想归巢
+沿途的景 牵挂的人
+两情迢迢
+柳叶桨溅桃花浪
+汀州里鹤眺远方
+饮一盏岁月留香
+唱一曲往事飞扬
+山水间歌声回荡
+回荡思念的滚烫
+去年的家书两行
+读来又热了眼眶
+云水边静沐暖阳
+烟波里久违的故乡
+别来无恙
+你在心上
+儿时的窗 苍老的墙
+是否偷换了方向
+堂前的你和我相逢时
+会沉默还是会诉尽衷肠
+山水间歌声回荡
+回荡思念的滚烫
+去年的家书两行
+读来又热了眼眶
+云水边静沐暖阳
+烟波里久违的故乡
+别来无恙
+你在心上
+别来无恙
+你在心上`
+            }
+        ];
+
+        // 初始化音乐播放器
+        function initMusicPlayer() {
+            const music = musicData[musicId];
+            const audio = new Audio(music.src);
+            const playBtn = document.querySelector('.play-btn');
+            const progressContainer = document.querySelector('.progress-container');
+            const progress = document.querySelector('.progress');
+            const timeDisplay = document.querySelector('.time-display');
+            const lyricsContainer = document.querySelector('.lyrics');
+            const commentInput = document.querySelector('.comment-input');
+            const commentSubmit = document.querySelector('.comment-submit');
+            const commentsList = document.querySelector('.comments-list');
+
+            // 检查用户登录状态
+            function checkLoginStatus() {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                if (!currentUser) {
+                    commentInput.placeholder = '请先登录后再评论...';
+                    commentInput.disabled = true;
+                    commentSubmit.disabled = true;
+                    return false;
+                }
+                commentInput.placeholder = '写下你的评论...';
+                commentInput.disabled = false;
+                commentSubmit.disabled = false;
+                return true;
+            }
+
+            // 从服务器加载评论
+            async function loadComments() {
+                try {
+                    // 从localStorage获取评论数据
+                    const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
+                    const comments = musicComments[musicId] || [];
+                    
+                    // 清空评论列表
+                    commentsList.innerHTML = '';
+                    
+                    if (comments.length === 0) {
+                        commentsList.innerHTML = '<div class="no-comments">暂无评论，快来发表第一条评论吧！</div>';
+                        return;
+                    }
+
+                    // 按时间倒序排列评论
+                    comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    // 添加评论到DOM
+                    comments.forEach(comment => addCommentToDOM(comment));
+                } catch (error) {
+                    console.error('Error loading comments:', error);
+                    commentsList.innerHTML = '<div class="error-message">加载评论失败，请稍后重试</div>';
+                }
+            }
+
+            // 添加评论到DOM
+            function addCommentToDOM(comment) {
+                const commentElement = document.createElement('div');
+                commentElement.className = `comment ${comment.isOwner ? 'owner-comment' : ''}`;
+                commentElement.innerHTML = `
+                    <div class="comment-header">
+                        <img src="images/头像.jpg" alt="头像" class="comment-avatar" style="width:32px;height:32px;border-radius:50%;margin-right:8px;vertical-align:middle;">
+                        <span class="comment-author">
+                            ${comment.isOwner ? '<i class="fas fa-crown owner-icon"></i>' : ''}
+                            ${comment.username}
+                            ${comment.isOwner ? '<span class="owner-badge">博主</span>' : ''}
+                        </span>
+                        <span class="comment-time">${new Date(comment.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div class="comment-content">${comment.content}</div>
+                    ${comment.userId === JSON.parse(localStorage.getItem('currentUser'))?.username ? 
+                        `<button class="delete-comment" data-id="${comment.id}">删除</button>` : ''}
+                `;
+                commentsList.insertBefore(commentElement, commentsList.firstChild);
+
+                // 添加删除评论的事件监听
+                const deleteBtn = commentElement.querySelector('.delete-comment');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', () => {
+                        if (confirm('确定要删除这条评论吗？')) {
+                            try {
+                                // 从localStorage中删除评论
+                                const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
+                                const comments = musicComments[musicId] || [];
+                                const updatedComments = comments.filter(c => c.id !== comment.id);
+                                musicComments[musicId] = updatedComments;
+                                localStorage.setItem('musicComments', JSON.stringify(musicComments));
+                                
+                                // 从DOM中移除评论
+                                commentElement.remove();
+                                
+                                // 如果没有评论了，显示提示信息
+                                if (updatedComments.length === 0) {
+                                    commentsList.innerHTML = '<div class="no-comments">暂无评论，快来发表第一条评论吧！</div>';
+                                }
+                            } catch (error) {
+                                console.error('Error deleting comment:', error);
+                                alert('删除评论失败，请稍后重试');
+                            }
+                        }
+                    });
+                }
+            }
+
+            // 提交评论
+            commentSubmit.addEventListener('click', async () => {
+                if (!checkLoginStatus()) {
+                    alert('请先登录后再评论');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const content = commentInput.value.trim();
+                if (!content) {
+                    alert('评论内容不能为空！');
+                    return;
+                }
+
+                try {
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                    const newComment = {
+                        id: Date.now().toString(),
+                        userId: currentUser.username,
+                        username: currentUser.username,
+                        content: content,
+                        timestamp: new Date().toISOString(),
+                        isOwner: currentUser.username === 'Lnansy'
+                    };
+
+                    // 保存评论到localStorage
+                    const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
+                    const comments = musicComments[musicId] || [];
+                    comments.push(newComment);
+                    musicComments[musicId] = comments;
+                    localStorage.setItem('musicComments', JSON.stringify(musicComments));
+
+                    // 添加评论到DOM
+                    addCommentToDOM(newComment);
+                    commentInput.value = '';
+
+                    // 触发评论添加事件
+                    const event = new CustomEvent('commentAdded', { detail: { musicId, comment: newComment } });
+                    document.dispatchEvent(event);
+                } catch (error) {
+                    console.error('Error posting comment:', error);
+                    alert('发表评论失败，请稍后重试');
+                }
+            });
+
+            // 回车提交评论
+            commentInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    commentSubmit.click();
+                }
+            });
+
+            // 初始化时检查登录状态并加载评论
+            checkLoginStatus();
+            loadComments();
+
+            // 更新音乐信息
+            document.querySelector('.music-title').textContent = music.title;
+            document.querySelector('.music-artist').textContent = music.artist;
+
+            // 加载歌词
+            lyricsContainer.textContent = music.lyrics;
+
+            // 初始状态为暂停
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+
+            // 播放/暂停
+            playBtn.addEventListener('click', () => {
+                if (audio.paused) {
+                    audio.play();
+                    playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    audio.pause();
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+
+            // 更新进度条
+            audio.addEventListener('timeupdate', () => {
+                const progressPercent = (audio.currentTime / audio.duration) * 100;
+                progress.style.width = `${progressPercent}%`;
+
+                // 更新时间显示
+                const currentMinutes = Math.floor(audio.currentTime / 60);
+                const currentSeconds = Math.floor(audio.currentTime % 60);
+                const durationMinutes = Math.floor(audio.duration / 60);
+                const durationSeconds = Math.floor(audio.duration % 60);
+                timeDisplay.textContent = `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} / ${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
+
+                // 更新当前歌词
+                const currentTime = audio.currentTime;
+                const lyrics = document.querySelectorAll('.lyrics div');
+                lyrics.forEach(lyric => {
+                    lyric.classList.remove('active');
+                    if (parseFloat(lyric.dataset.time) <= currentTime) {
+                        lyric.classList.add('active');
+                    }
+                });
+            });
+
+            // 点击进度条跳转
+            progressContainer.addEventListener('click', (e) => {
+                const rect = progressContainer.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                audio.currentTime = percent * audio.duration;
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initMusicPlayer);
+    </script>
+</body>
+</html> 

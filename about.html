@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于我 - Lnansy's World</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: "KaiTi", "楷体", serif;
+            background: url('images/记录.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-size: 16px;
+        }
+
+        .content-wrapper {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        .about-container {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .profile-image {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .about-content {
+            flex: 1;
+        }
+
+        .about-content h2 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        .contact-info {
+            margin-top: 2rem;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-color-hover);
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-item i {
+            margin-right: 0.5rem;
+        }
+
+        .social-links {
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            color: var(--primary-color);
+            margin-right: 1rem;
+        }
+
+        .social-links a:hover {
+            color: var(--primary-color-hover);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .footer-content p {
+            margin: 0;
+        }
+
+        .footer-content .social-links {
+            display: flex;
+            align-items: center;
+        }
+
+        .footer-content .social-links a {
+            margin-left: 1rem;
+        }
+
+        .social-link {
+            color: #333;
+            text-decoration: none;
+            margin-right: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .social-link:hover {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">Lnansy</div>
+            <div class="nav-links">
+                <a href="index.html">
+                    <i class="fas fa-home"></i>
+                    <span>首页</span>
+                </a>
+                <a href="records.html">
+                    <i class="fas fa-book"></i>
+                    <span>记录</span>
+                </a>
+                <a href="messages.html">
+                    <i class="fas fa-comment"></i>
+                    <span>留言</span>
+                </a>
+                <a href="music.html">
+                    <i class="fas fa-music"></i>
+                    <span>音乐</span>
+                </a>
+                <a href="about.html" class="active">
+                    <i class="fas fa-user"></i>
+                    <span>关于我</span>
+                </a>
+                <div id="userSection">
+                    <!-- 用户登录状态将在这里动态添加 -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main>
+        <section class="section">
+            <div class="content-wrapper">
+                <div class="about-container">
+                    <img src="images/关于我.jpg" alt="Profile" class="profile-image">
+                    <div class="about-content">
+                        <h2>你好，我是 Lnansy</h2>
+                        <p>欢迎来到我的个人博客！我是一名热爱生活、热爱创作的博主。在这里，我将分享我的生活点滴、想法和创作。</p>
+                        <p>除了编程，我还喜欢音乐、摄影和旅行。我相信生活中有太多美好的事物值得我们去发现和分享。</p>
+                        <p>这个博客是我与这个世界分享我的想法和创作的地方。希望我的内容能够给你带来一些启发和快乐。</p>
+                        
+                        <div class="contact-info">
+                            <h3>联系方式</h3>
+                            <div class="contact-item">
+                                <span>3962913265@qq.com</span>
+                            </div>
+                            <div class="contact-item">
+                                <span>19506763819</span>
+                            </div>
+                            <div class="contact-item">
+                                <span>中国 山东</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">联系我</h2>
+                    <form style="max-width: 600px; margin: 0 auto;">
+                        <div class="form-group">
+                            <label class="form-label">姓名</label>
+                            <input type="text" class="form-control" placeholder="请输入您的姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-control" placeholder="请输入您的邮箱">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">主题</label>
+                            <input type="text" class="form-control" placeholder="请输入主题">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">消息</label>
+                            <textarea class="form-control" rows="5" placeholder="请输入您的消息"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">发送消息</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 底部版权信息 -->
+    <footer>
+        <div class="footer-content">
+            <p>© 2025 Lnansy. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 检查用户登录状态
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+        const userSection = document.getElementById('userSection');
+
+        function updateUserSection() {
+            if (currentUser && currentUser.username !== '访客') {
+                userSection.innerHTML = `
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>${currentUser.username}</span>
+                        <div class="user-menu">
+                            <a href="#" class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>退出登录</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    window.location.reload();
+                });
+
+                const userProfile = document.querySelector('.user-profile');
+                const userMenu = document.querySelector('.user-menu');
+                userProfile.addEventListener('click', () => {
+                    userMenu.classList.toggle('active');
+                });
+                document.addEventListener('click', (e) => {
+                    if (!userProfile.contains(e.target)) {
+                        userMenu.classList.remove('active');
+                    }
+                });
+            } else {
+                userSection.innerHTML = `
+                    <a href="login.html" class="login-link">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>登录</span>
+                    </a>
+                `;
+            }
+        }
+
+        // 页面加载完成后更新用户状态
+        document.addEventListener('DOMContentLoaded', updateUserSection);
+
+        // 联系表单提交
+        const contactForm = document.querySelector('form');
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('感谢您的留言！我会尽快回复您。');
+            contactForm.reset();
+        });
+    </script>
+</body>
+</html> 
