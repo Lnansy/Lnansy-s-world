@@ -907,10 +907,16 @@
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
             
             if (currentUser && currentUser.username !== '访客') {
+                // 检查是否为博主
+                const isBlogger = currentUser.username === 'Lnansy';
+                
                 userSection.innerHTML = `
                     <div class="user-profile">
                         <div class="user-avatar">
-                            <img src="images/头像.jpg" alt="用户头像">
+                            ${isBlogger ? 
+                                `<img src="images/头像.jpg" alt="博主头像">` : 
+                                `<i class="fas fa-user"></i>`
+                            }
                         </div>
                         <span>${currentUser.username}</span>
                         <div class="user-menu">
@@ -989,6 +995,14 @@
         function sendDanmaku() {
             const text = danmakuInput.value.trim();
             if (text) {
+                // 检查用户是否登录
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+                if (currentUser.username === '访客') {
+                    alert('请先登录后再发表留言！');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
                 // 创建弹幕元素
                 if (danmakuCount >= maxDanmaku) {
                     // 如果弹幕数量达到上限，移除最早的弹幕
@@ -1018,7 +1032,7 @@
                 }
 
                 // 保存留言到历史记录
-                const username = getCurrentUser();
+                const username = currentUser.username;
                 const newMessage = {
                     id: Date.now(),
                     author: username,
@@ -1093,7 +1107,10 @@
                 messageElement.innerHTML = `
                     <div class="message-header">
                         <div class="message-author">
-                            <img src="images/头像.jpg" alt="用户头像" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                            ${message.author === 'Lnansy' ? 
+                                `<img src="images/头像.jpg" alt="博主头像" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">` : 
+                                `<i class="fas fa-user-circle"></i>`
+                            }
                             ${message.author}
                             ${isBloggerMessage ? '<span style="margin-left:5px;font-size:0.8em;background:#ff9800;color:white;padding:1px 5px;border-radius:3px;">博主</span>' : ''}
                         </div>
@@ -1221,6 +1238,13 @@
 
         // 添加删除留言的函数
         function deleteMessage(messageId) {
+            // 检查用户是否登录
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+            if (currentUser.username === '访客') {
+                alert('请先登录后再操作！');
+                return;
+            }
+            
             // 从存储的消息数组中过滤掉要删除的消息
             storedMessages = storedMessages.filter(message => message.id !== messageId);
             
@@ -1245,6 +1269,19 @@
 
         // 清空历史记录按钮点击事件
         clearMessagesBtn.addEventListener('click', () => {
+            // 检查用户是否登录
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+            if (currentUser.username === '访客') {
+                alert('请先登录后再操作！');
+                return;
+            }
+            
+            // 检查是否为博主
+            if (currentUser.username !== 'Lnansy') {
+                alert('只有博主才能清空所有留言！');
+                return;
+            }
+            
             if (confirm('确定要清空所有留言记录吗？此操作不可恢复！')) {
                 // 清空消息数组
                 storedMessages = [];

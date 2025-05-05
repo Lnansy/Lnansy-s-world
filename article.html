@@ -621,23 +621,40 @@
         function updateUserSection() {
             const userSection = document.getElementById('userSection');
             if (currentUser && currentUser.username !== '访客') {
+                // 检查是否为博主
+                const isBlogger = currentUser.username === 'Lnansy';
+                
                 userSection.innerHTML = `
-                    <span class="user-info">
-                        <i class="fas fa-user"></i>
-                        ${currentUser.username}
-                    </span>
-                    <a href="#" onclick="logout()">退出</a>
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            ${isBlogger ? 
+                                `<img src="images/头像.jpg" alt="博主头像">` : 
+                                `<i class="fas fa-user"></i>`
+                            }
+                        </div>
+                        <span>${currentUser.username}</span>
+                        <div class="user-menu">
+                            <a href="#" class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>退出登录</span>
+                            </a>
+                        </div>
+                    </div>
                 `;
+                
+                document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    window.location.reload();
+                });
             } else {
                 userSection.innerHTML = `
-                    <a href="login.html">登录</a>
+                    <a href="login.html" class="login-link">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>登录</span>
+                    </a>
                 `;
             }
-        }
-
-        function logout() {
-            localStorage.setItem('currentUser', JSON.stringify({ username: '访客' }));
-            window.location.reload();
         }
     </script>
     <script src="js/emoji-picker.js"></script>

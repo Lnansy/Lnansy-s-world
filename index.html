@@ -1500,7 +1500,10 @@
                 userSection.innerHTML = `
                     <div class="user-profile">
                         <div class="user-avatar">
-                            <img src="images/头像.jpg" alt="用户头像">
+                            ${user.username === 'Lnansy' ? 
+                              `<img src="images/头像.jpg" alt="博主头像">` : 
+                              `<i class="fas fa-user"></i>`
+                            }
                         </div>
                         <span>${user.username}</span>
                         <div class="user-menu">
@@ -1697,14 +1700,17 @@
                     document.getElementById('userSection').innerHTML = `
                         <div class="user-profile">
                             <div class="user-avatar">
-                                <img src="images/头像.jpg" alt="用户头像">
-                    </div>
+                                ${user.username === 'Lnansy' ? 
+                                  `<img src="images/头像.jpg" alt="博主头像">` : 
+                                  `<i class="fas fa-user"></i>`
+                                }
+                            </div>
                             <span>${user.username}</span>
                             <div class="user-menu">
                                 <a href="#" class="user-menu-item">退出登录</a>
-                    </div>
-                </div>
-            `;
+                            </div>
+                        </div>
+                    `;
                 } else {
                     // 未登录用户不显示任何内容
                     document.getElementById('userSection').innerHTML = '';

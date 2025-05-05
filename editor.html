@@ -185,6 +185,72 @@
     </main>
 
     <script>
+        // 检查用户登录状态
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+        const userSection = document.getElementById('userSection');
+
+        // 页面加载时检查用户是否登录
+        document.addEventListener('DOMContentLoaded', () => {
+            // 如果用户未登录，重定向到登录页面
+            if (currentUser.username === '访客') {
+                alert('请先登录后再编辑内容！');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            updateUserSection();
+            
+            // 初始化日期选择器默认值为当前时间
+            const now = new Date();
+            const localDatetime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            document.getElementById('publishDate').value = localDatetime;
+            
+            // 获取URL参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const type = urlParams.get('type');
+            if (type) {
+                document.getElementById('contentType').value = type;
+            }
+        });
+
+        function updateUserSection() {
+            if (currentUser && currentUser.username !== '访客') {
+                // 检查是否为博主
+                const isBlogger = currentUser.username === 'Lnansy';
+                
+                userSection.innerHTML = `
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            ${isBlogger ? 
+                                `<img src="images/头像.jpg" alt="博主头像">` : 
+                                `<i class="fas fa-user"></i>`
+                            }
+                        </div>
+                        <span>${currentUser.username}</span>
+                        <div class="user-menu">
+                            <a href="#" class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>退出登录</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'index.html';
+                });
+            } else {
+                userSection.innerHTML = `
+                    <a href="login.html" class="login-link">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>登录</span>
+                    </a>
+                `;
+            }
+        }
+
         // 初始化富文本编辑器
         var quill = new Quill('#editor', {
             theme: 'snow',
@@ -244,44 +310,6 @@
             alert('草稿已保存！');
         });
 
-        // 检查用户登录状态
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
-        const userSection = document.getElementById('userSection');
-
-        function updateUserSection() {
-            if (currentUser) {
-                userSection.innerHTML = `
-                    <div class="user-profile">
-                        <div class="user-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <span>${currentUser.username}</span>
-                        <div class="user-menu">
-                            <a href="#" class="user-menu-item" id="logoutBtn">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>退出登录</span>
-                            </a>
-                        </div>
-                    </div>
-                `;
-
-                document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    localStorage.removeItem('currentUser');
-                    window.location.reload();
-                });
-            } else {
-                userSection.innerHTML = `
-                    <a href="login.html" class="login-link">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <span>登录</span>
-                    </a>
-                `;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', updateUserSection);
-
         // 附件上传与预览
         const attachmentInput = document.getElementById('attachmentInput');
         const attachmentList = document.getElementById('attachmentList');
@@ -295,6 +323,13 @@
         // 发布内容
         const publishBtn = document.querySelector('.publish');
         publishBtn.addEventListener('click', async () => {
+            // 再次检查用户是否登录
+            if (currentUser.username === '访客') {
+                alert('请先登录后再发布内容！');
+                window.location.href = 'login.html';
+                return;
+            }
+            
             const title = document.querySelector('.editor-title-input').value;
             const type = document.querySelector('#contentType').value;
             const category = document.querySelector('#category').value;

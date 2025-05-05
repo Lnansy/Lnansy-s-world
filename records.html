@@ -396,10 +396,16 @@
 
         function updateUserSection() {
             if (currentUser) {
+                // 检查是否为博主
+                const isBlogger = currentUser.username === 'Lnansy';
+                
                 userSection.innerHTML = `
                     <div class="user-profile">
                         <div class="user-avatar">
-                            <img src="images/头像.jpg" alt="用户头像">
+                            ${isBlogger ? 
+                                `<img src="images/头像.jpg" alt="博主头像">` : 
+                                `<i class="fas fa-user"></i>`
+                            }
                         </div>
                         <span>${currentUser.username}</span>
                         <div class="user-menu">
@@ -471,22 +477,23 @@
                 searchResults.innerHTML = `找到 ${filteredContent.length} 条相关内容`;
             }
 
-            // 根据用户类型筛选内容
-            // 博主可以看到所有内容，访客只能看到文章
-            if (!isAdmin) {
-                filteredContent = filteredContent.filter(item => item.type === 'article');
-            }
+            // 根据用户类型筛选随笔内容
+            // 博主可以看到所有随笔，普通用户只能看到自己发的随笔
+            let userEssays = filteredContent.filter(item => {
+                if (item.type === 'article') {
+                    return true; // 所有文章都显示
+                } else if (item.type === 'essay') {
+                    return isAdmin || item.author === currentUser.username; // 随笔只有博主或自己发的才显示
+                }
+                return false;
+            });
 
-            if (filteredContent.length === 0) {
-                if (isAdmin || document.querySelector('.filter-button.active').dataset.type !== 'essay') {
-                    articleList.innerHTML = '<div class="no-content">暂无文章</div>';
+            if (userEssays.length === 0) {
+                if (document.querySelector('.filter-button.active').dataset.type !== 'article') {
+                    essayList.innerHTML = '<div class="no-content">暂无随笔</div>';
                 }
                 
-                if (isAdmin) {
-                    essayList.innerHTML = '<div class="no-content">暂无随笔</div>';
-                } else {
-                    essayList.innerHTML = '<div class="no-content">随笔仅对博主可见</div>';
-                }
+                articleList.innerHTML = '<div class="no-content">暂无文章</div>';
                 
                 if (searchTerm) {
                     searchResults.innerHTML = '未找到相关内容';
@@ -494,7 +501,7 @@
                 return;
             }
 
-            filteredContent.forEach(item => {
+            userEssays.forEach(item => {
                 const highlightText = (text) => {
                     if (!searchTerm) return text;
                     const regex = new RegExp(searchTerm, 'gi');
@@ -511,7 +518,7 @@
                     <div class="${item.type}-item" data-category="${item.category}">
                         <h3 class="${item.type}-title">
                             ${highlightText(item.title)}
-                            ${currentUser.username === item.author ? 
+                            ${currentUser.username === item.author || isAdmin ? 
                                 `<button class="delete-button" data-id="${item.id}">
                                     <i class="fas fa-trash"></i>
                                 </button>` : 
@@ -535,10 +542,7 @@
                 `;
 
                 if (item.type === 'essay') {
-                    // 只有博主才显示随笔
-                    if (isAdmin) {
-                        essayList.innerHTML += itemHtml;
-                    }
+                    essayList.innerHTML += itemHtml;
                 } else {
                     articleList.innerHTML += itemHtml;
                 }
@@ -580,30 +584,17 @@
                 const type = button.dataset.type;
                 if (type === 'all') {
                     document.getElementById('articleSection').style.display = 'block';
-                    
-                    // 只有博主可以看随笔
-                    if (isAdmin) {
-                        document.getElementById('essaySection').style.display = 'block';
-                    } else {
-                        document.getElementById('essaySection').style.display = 'none';
-                    }
+                    document.getElementById('essaySection').style.display = 'block';
                 } else if (type === 'essay') {
-                    // 只有博主可以看随笔
-                    if (isAdmin) {
-                        document.getElementById('essaySection').style.display = 'block';
-                    } else {
-                        document.getElementById('essaySection').style.display = 'none';
-                        // 如果非博主点击了随笔标签，提示权限不足
-                        alert('随笔内容仅对博主开放');
-                        // 重置为全部标签
-                        document.querySelector('.filter-button[data-type="all"]').click();
-                        return;
-                    }
+                    document.getElementById('essaySection').style.display = 'block';
                     document.getElementById('articleSection').style.display = 'none';
                 } else {
                     document.getElementById('essaySection').style.display = 'none';
                     document.getElementById('articleSection').style.display = 'block';
                 }
+                
+                // 重新加载内容以应用筛选
+                loadContent();
             });
         });
 
@@ -625,42 +616,55 @@
             updateUserSection();
             loadContent();
             
-            // 检查用户身份，非博主隐藏随笔相关功能
+            // 检查用户身份，更新随笔区域的标题和提示
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
             const isAdmin = currentUser.username === 'Lnansy'; // 检查是否为博主
             
-            if (!isAdmin) {
-                // 隐藏添加随笔按钮
-                const essaySection = document.getElementById('essaySection');
-                if (essaySection) {
-                    // 只隐藏添加按钮，保留标题
-                    const addEssayBtn = document.getElementById('addEssayBtn');
-                    if (addEssayBtn) {
-                        addEssayBtn.style.display = 'none';
+            // 更新随笔区域的提示信息
+            const essaySection = document.getElementById('essaySection');
+            if (essaySection) {
+                const cardTitle = essaySection.querySelector('.card-title');
+                if (cardTitle) {
+                    if (isAdmin) {
+                        // 博主看到所有随笔
+                        cardTitle.innerHTML = '随笔 <button class="add-button" id="addEssayBtn"><i class="fas fa-plus"></i></button>';
+                    } else if (currentUser.username !== '访客') {
+                        // 已登录用户只看到自己的随笔
+                        cardTitle.innerHTML = '随笔 <small style="font-size: 12px; color: #999;">(仅显示您自己的随笔)</small> <button class="add-button" id="addEssayBtn"><i class="fas fa-plus"></i></button>';
+                    } else {
+                        // 未登录用户看不到随笔
+                        cardTitle.innerHTML = '随笔 <small style="font-size: 12px; color: #999;">(请登录后查看和发布)</small>';
+                        // 默认隐藏随笔区域
+                        essaySection.style.display = 'none';
                     }
-                    
-                    // 更新随笔区域的标题
-                    const cardTitle = essaySection.querySelector('.card-title');
-                    if (cardTitle) {
-                        cardTitle.innerHTML = '随笔 <small style="font-size: 12px; color: #999;">(仅博主可见)</small>';
-                    }
-                    
-                    // 默认隐藏随笔区域
-                    essaySection.style.display = 'none';
+                }
+                
+                // 重新添加添加按钮的事件监听
+                const addEssayBtn = document.getElementById('addEssayBtn');
+                if (addEssayBtn) {
+                    addEssayBtn.addEventListener('click', () => {
+                        if (currentUser.username === '访客') {
+                            alert('请先登录后再发布随笔');
+                            window.location.href = 'login.html';
+                            return;
+                        }
+                        window.location.href = 'editor.html?type=essay';
+                    });
                 }
             }
-        });
-
-        // 添加按钮功能
-        const addEssayBtn = document.getElementById('addEssayBtn');
-        const addArticleBtn = document.getElementById('addArticleBtn');
-
-        addEssayBtn.addEventListener('click', () => {
-            window.location.href = 'editor.html?type=essay';
-        });
-
-        addArticleBtn.addEventListener('click', () => {
-            window.location.href = 'editor.html?type=article';
+            
+            // 文章添加按钮
+            const addArticleBtn = document.getElementById('addArticleBtn');
+            if (addArticleBtn) {
+                addArticleBtn.addEventListener('click', () => {
+                    if (currentUser.username === '访客') {
+                        alert('请先登录后再发布文章');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    window.location.href = 'editor.html?type=article';
+                });
+            }
         });
     </script>
 </body>

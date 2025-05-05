@@ -459,10 +459,16 @@
             const userSection = document.getElementById('userSection');
             
             if (currentUser && currentUser.username !== '访客') {
+                // 检查是否为博主
+                const isBlogger = currentUser.username === 'Lnansy';
+                
                 userSection.innerHTML = `
                     <div class="user-profile">
                         <div class="user-avatar">
-                            <img src="images/头像.jpg" alt="用户头像">
+                            ${isBlogger ? 
+                                `<img src="images/头像.jpg" alt="博主头像">` : 
+                                `<i class="fas fa-user"></i>`
+                            }
                         </div>
                         <span>${currentUser.username}</span>
                         <div class="user-menu">
