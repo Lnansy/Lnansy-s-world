@@ -395,7 +395,7 @@
         const userSection = document.getElementById('userSection');
 
         function updateUserSection() {
-            if (currentUser) {
+            if (currentUser && currentUser.username !== '访客') {
                 // 检查是否为博主
                 const isBlogger = currentUser.username === 'Lnansy';
                 
@@ -403,7 +403,7 @@
                     <div class="user-profile">
                         <div class="user-avatar">
                             ${isBlogger ? 
-                                `<img src="images/头像.jpg" alt="博主头像">` : 
+                                `<img src="images/3.png" alt="博主头像">` : 
                                 `<i class="fas fa-user"></i>`
                             }
                         </div>
@@ -478,12 +478,17 @@
             }
 
             // 根据用户类型筛选随笔内容
-            // 博主可以看到所有随笔，普通用户只能看到自己发的随笔
+            // 博主可以看到所有随笔，普通用户只能看到博主的随笔和自己的随笔
             let userEssays = filteredContent.filter(item => {
                 if (item.type === 'article') {
                     return true; // 所有文章都显示
                 } else if (item.type === 'essay') {
-                    return isAdmin || item.author === currentUser.username; // 随笔只有博主或自己发的才显示
+                    // 博主可以看所有随笔
+                    if (isAdmin) {
+                        return true;
+                    }
+                    // 普通用户只能看到博主的随笔和自己的随笔
+                    return item.author === currentUser.username || item.author === 'Lnansy';
                 }
                 return false;
             });
@@ -629,8 +634,8 @@
                         // 博主看到所有随笔
                         cardTitle.innerHTML = '随笔 <button class="add-button" id="addEssayBtn"><i class="fas fa-plus"></i></button>';
                     } else if (currentUser.username !== '访客') {
-                        // 已登录用户只看到自己的随笔
-                        cardTitle.innerHTML = '随笔 <small style="font-size: 12px; color: #999;">(仅显示您自己的随笔)</small> <button class="add-button" id="addEssayBtn"><i class="fas fa-plus"></i></button>';
+                        // 已登录用户只看到博主和自己的随笔
+                        cardTitle.innerHTML = '随笔 <small style="font-size: 12px; color: #999;">(仅显示博主和您自己的随笔)</small> <button class="add-button" id="addEssayBtn"><i class="fas fa-plus"></i></button>';
                     } else {
                         // 未登录用户看不到随笔
                         cardTitle.innerHTML = '随笔 <small style="font-size: 12px; color: #999;">(请登录后查看和发布)</small>';
@@ -666,6 +671,43 @@
                 });
             }
         });
+    </script>
+    
+    <!-- 预先填充用户状态，避免闪烁 -->
+    <script>
+        // 立即执行以避免登录按钮闪烁
+        (function() {
+            try {
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+                if (user && user.username !== '访客') {
+                    const isBlogger = user.username === 'Lnansy';
+                    document.getElementById('userSection').innerHTML = `
+                        <div class="user-profile">
+                            <div class="user-avatar">
+                                ${isBlogger ? 
+                                  `<img src="images/3.png" alt="博主头像">` : 
+                                  `<i class="fas fa-user"></i>`
+                                }
+                            </div>
+                            <span>${user.username}</span>
+                            <div class="user-menu">
+                                <a href="#" class="user-menu-item">退出登录</a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 未登录状态显示登录按钮
+                    document.getElementById('userSection').innerHTML = `
+                        <a href="login.html" class="login-link">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>登录</span>
+                        </a>
+                    `;
+                }
+            } catch (e) {
+                console.error('预填充用户状态出错:', e);
+            }
+        })();
     </script>
 </body>
 </html> 

@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>文章详情 - Lnansy's World</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
@@ -156,6 +159,37 @@
 
         .comment-form {
             margin-top: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .comment-form-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comment-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .comment-avatar i {
+            font-size: 24px;
+            color: #666;
         }
 
         .emoji-input-wrapper {
@@ -282,6 +316,48 @@
         .comment-like-button.animate-like i {
             animation: likeAnimation 0.3s ease;
         }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        /* 头像图片样式 */
+        .article-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+        
+        .article-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* 评论区头像样式 */
+        .comment-author img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -323,6 +399,10 @@
                 <i class="fas fa-arrow-left"></i>
                 <span>返回</span>
             </a>
+            <a href="javascript:void(0)" onclick="refreshPage()" style="float: right; color: #007bff; text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                <i class="fas fa-sync-alt"></i>
+                <span>刷新页面</span>
+            </a>
             <article id="articleContent">
                 <!-- 文章内容将通过 JavaScript 动态加载 -->
             </article>
@@ -330,9 +410,19 @@
     </main>
 
     <script>
+        // 添加页面刷新函数
+        function refreshPage() {
+            // 清除缓存并强制刷新
+            window.location.reload(true);
+        }
+        
         // 全局声明currentUser，避免作用域问题
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+        let currentUser;
+        
         document.addEventListener('DOMContentLoaded', () => {
+            // 首先确保获取正确的用户信息
+            currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+            
             const articleId = new URLSearchParams(window.location.search).get('id');
             
             if (!articleId) {
@@ -348,6 +438,26 @@
         });
 
         function loadArticle(articleId) {
+            // 再次检查用户状态，确保最新
+            currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+            
+            // Check if user is logged in
+            if (currentUser.username === '访客') {
+                const articleContentNode = document.getElementById('articleContent');
+                articleContentNode.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <i class="fas fa-lock" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
+                        <h2>请先登录</h2>
+                        <p>您需要登录后才能查看文章内容</p>
+                        <a href="login.html" class="action-button" style="display: inline-flex; margin-top: 20px; text-decoration: none; background: #007bff; color: white; padding: 10px 20px; border-radius: 5px;">
+                            <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>
+                            <span>去登录</span>
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
             const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
             const article = publishedContent.find(item => String(item.id) === String(articleId));
             const articleContentNode = document.getElementById('articleContent');
@@ -357,6 +467,44 @@
             if (!article) {
                 articleContentNode.innerHTML = '<p class="error">文章不存在或已被删除</p>';
                 return;
+            }
+            
+            console.log('文章数据:', article); // 添加调试输出
+            
+            // 默认类型处理 - 如果没有type字段，根据其他信息判断
+            if (!article.type) {
+                // 这里根据URL或者其他信息来判断文章类型
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('type')) {
+                    article.type = urlParams.get('type');
+                } else {
+                    // 默认设置为article类型
+                    article.type = 'article';
+                }
+            }
+
+            // 检查当前用户是否有权限查看该随笔
+            // 访客只能看博主和本人发布的随笔
+            if (article.type === 'essay') {
+                // 博主可以看所有随笔
+                if (currentUser.username === 'Lnansy') {
+                    // 博主有权限查看所有随笔，无需处理
+                }
+                // 普通用户只能看自己发布的随笔和博主的随笔
+                else if (article.author !== currentUser.username && article.author !== 'Lnansy') {
+                    articleContentNode.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <i class="fas fa-lock" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
+                            <h2>没有查看权限</h2>
+                            <p>您只能查看博主和自己发布的随笔</p>
+                            <a href="records.html" class="action-button" style="display: inline-flex; margin-top: 20px; text-decoration: none; background: #007bff; color: white; padding: 10px 20px; border-radius: 5px;">
+                                <i class="fas fa-arrow-left" style="margin-right: 8px;"></i>
+                                <span>返回记录</span>
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
             }
 
             const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
@@ -386,7 +534,15 @@
                     <h1 class="article-title">${article.title}</h1>
                     <div class="article-meta">
                         <span><i class="far fa-calendar"></i> ${new Date(article.date).toLocaleDateString()}</span>
-                        <span><i class="far fa-user"></i> ${article.author}</span>
+                        <span>
+                            ${article.author === 'Lnansy' ? 
+                              `<div class="article-avatar">
+                                <img src="images/3.png" alt="博主头像">
+                               </div>` : 
+                              `<i class="far fa-user"></i>`
+                            }
+                            ${article.author}
+                        </span>
                         <span><i class="far fa-eye"></i> ${articleInteractions.views} 次浏览</span>
                         ${currentUser.username === article.author ? `
                             <button onclick="deleteArticle('${article.id}')" class="delete-btn">
@@ -429,6 +585,10 @@
                                 <div class="comment ${comment.isOwner ? 'owner-comment' : ''}" data-id="${comment.id}">
                                     <div class="comment-header">
                                         <span class="comment-author">
+                                            ${comment.userId === 'Lnansy' ? 
+                                              `<img src="images/3.png" alt="博主头像">` : 
+                                              `<i class="fas fa-user-circle"></i>`
+                                            }
                                             ${comment.userId}
                                             ${comment.isOwner ? '<span class="owner-badge">博主</span>' : ''}
                                         </span>
@@ -446,6 +606,15 @@
                         }).join('')}
                     </div>
                     <div class="comment-form">
+                        <div class="comment-form-header">
+                            <div class="comment-avatar">
+                                ${currentUser.username === 'Lnansy' ? 
+                                  `<img src="images/3.png" alt="博主头像">` : 
+                                  `<i class="fas fa-user-circle"></i>`
+                                }
+                            </div>
+                            <span>${currentUser.username}</span>
+                        </div>
                         <div class="emoji-input-wrapper">
                             <button class="emoji-picker-trigger" data-target="commentInput">
                                 <i class="far fa-smile"></i>
@@ -457,6 +626,7 @@
                     </div>
                 </div>
             `;
+
             articleContentNode.innerHTML = articleHtml;
             document.title = `${article.title} - Lnansy's World`;
         }
@@ -628,7 +798,7 @@
                     <div class="user-profile">
                         <div class="user-avatar">
                             ${isBlogger ? 
-                                `<img src="images/头像.jpg" alt="博主头像">` : 
+                                `<img src="images/3.png" alt="博主头像">` : 
                                 `<i class="fas fa-user"></i>`
                             }
                         </div>
@@ -658,5 +828,42 @@
         }
     </script>
     <script src="js/emoji-picker.js"></script>
+    
+    <!-- 预先填充用户状态，避免闪烁 -->
+    <script>
+        // 立即执行以避免登录按钮闪烁
+        (function() {
+            try {
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+                if (user && user.username !== '访客') {
+                    const isBlogger = user.username === 'Lnansy';
+                    document.getElementById('userSection').innerHTML = `
+                        <div class="user-profile">
+                            <div class="user-avatar">
+                                ${isBlogger ? 
+                                  `<img src="images/3.png" alt="博主头像">` : 
+                                  `<i class="fas fa-user"></i>`
+                                }
+                            </div>
+                            <span>${user.username}</span>
+                            <div class="user-menu">
+                                <a href="#" class="user-menu-item">退出登录</a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 未登录状态显示登录按钮
+                    document.getElementById('userSection').innerHTML = `
+                        <a href="login.html" class="login-link">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>登录</span>
+                        </a>
+                    `;
+                }
+            } catch (e) {
+                console.error('预填充用户状态出错:', e);
+            }
+        })();
+    </script>
 </body>
-</html> 
+</html>

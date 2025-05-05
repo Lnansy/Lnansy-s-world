@@ -1501,7 +1501,7 @@
                     <div class="user-profile">
                         <div class="user-avatar">
                             ${user.username === 'Lnansy' ? 
-                              `<img src="images/头像.jpg" alt="博主头像">` : 
+                              `<img src="images/3.png" alt="博主头像">` : 
                               `<i class="fas fa-user"></i>`
                             }
                         </div>
@@ -1543,8 +1543,13 @@
                 });
             } else {
                 console.log('[Debug] 当前用户未登录');
-                // 不显示任何内容，移除登录链接
-                userSection.innerHTML = '';
+                // 显示登录链接
+                userSection.innerHTML = `
+                    <a href="login.html" class="login-link">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>登录</span>
+                    </a>
+                `;
             }
             console.log('[Debug] 用户状态更新完成');
         }
@@ -1701,19 +1706,24 @@
                         <div class="user-profile">
                             <div class="user-avatar">
                                 ${user.username === 'Lnansy' ? 
-                                  `<img src="images/头像.jpg" alt="博主头像">` : 
+                                  `<img src="images/3.png" alt="博主头像">` : 
                                   `<i class="fas fa-user"></i>`
                                 }
-                            </div>
+                    </div>
                             <span>${user.username}</span>
                             <div class="user-menu">
                                 <a href="#" class="user-menu-item">退出登录</a>
-                            </div>
-                        </div>
-                    `;
+                    </div>
+                </div>
+            `;
                 } else {
-                    // 未登录用户不显示任何内容
-                    document.getElementById('userSection').innerHTML = '';
+                    // 未登录用户显示登录按钮
+                    document.getElementById('userSection').innerHTML = `
+                        <a href="login.html" class="login-link">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>登录</span>
+                        </a>
+                    `;
                 }
                     } catch (e) {
                 console.error('预填充用户状态出错:', e);

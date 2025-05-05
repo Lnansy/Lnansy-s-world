@@ -914,7 +914,7 @@
                     <div class="user-profile">
                         <div class="user-avatar">
                             ${isBlogger ? 
-                                `<img src="images/头像.jpg" alt="博主头像">` : 
+                                `<img src="images/3.png" alt="博主头像">` : 
                                 `<i class="fas fa-user"></i>`
                             }
                         </div>
@@ -1108,7 +1108,7 @@
                     <div class="message-header">
                         <div class="message-author">
                             ${message.author === 'Lnansy' ? 
-                                `<img src="images/头像.jpg" alt="博主头像" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">` : 
+                                `<img src="images/3.png" alt="博主头像" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">` : 
                                 `<i class="fas fa-user-circle"></i>`
                             }
                             ${message.author}
@@ -1329,5 +1329,42 @@
         }
     </script>
     <script src="js/emoji-picker.js"></script>
+    
+    <!-- 预先填充用户状态，避免闪烁 -->
+    <script>
+        // 立即执行以避免登录按钮闪烁
+        (function() {
+            try {
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+                if (user && user.username !== '访客') {
+                    const isBlogger = user.username === 'Lnansy';
+                    document.getElementById('userSection').innerHTML = `
+                        <div class="user-profile">
+                            <div class="user-avatar">
+                                ${isBlogger ? 
+                                  `<img src="images/3.png" alt="博主头像">` : 
+                                  `<i class="fas fa-user"></i>`
+                                }
+                            </div>
+                            <span>${user.username}</span>
+                            <div class="user-menu">
+                                <a href="#" class="user-menu-item">退出登录</a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 未登录状态显示登录按钮
+                    document.getElementById('userSection').innerHTML = `
+                        <a href="login.html" class="login-link">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>登录</span>
+                        </a>
+                    `;
+                }
+            } catch (e) {
+                console.error('预填充用户状态出错:', e);
+            }
+        })();
+    </script>
 </body>
 </html> 
