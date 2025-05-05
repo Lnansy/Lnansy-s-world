@@ -428,6 +428,7 @@
         // 加载并显示内容
         function loadContent(searchTerm = '') {
             const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+            const contentInteractions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
             const essayList = document.getElementById('essayList');
             const articleList = document.getElementById('articleList');
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
@@ -468,6 +469,12 @@
                     return text.replace(regex, match => `<span class="highlight">${match}</span>`);
                 };
 
+                // 获取文章的交互数据
+                const interactions = contentInteractions[item.id] || { views: 0, likes: [], comments: [] };
+                const viewCount = interactions.views || 0;
+                const likeCount = interactions.likes ? interactions.likes.length : 0;
+                const commentCount = interactions.comments ? interactions.comments.length : 0;
+
                 const itemHtml = `
                     <div class="${item.type}-item" data-category="${item.category}">
                         <h3 class="${item.type}-title">
@@ -487,9 +494,9 @@
                         <div class="${item.type}-footer">
                             <a href="article.html?id=${item.id}" class="read-more">阅读全文</a>
                             <div class="${item.type}-stats">
-                                <span><i class="far fa-eye"></i> 0</span>
-                                <span><i class="far fa-heart"></i> 0</span>
-                                <span><i class="far fa-comment"></i> 0</span>
+                                <span><i class="far fa-eye"></i> ${viewCount}</span>
+                                <span><i class="far fa-heart"></i> ${likeCount}</span>
+                                <span><i class="far fa-comment"></i> ${commentCount}</span>
                             </div>
                         </div>
                     </div>
@@ -510,6 +517,12 @@
                         let content = JSON.parse(localStorage.getItem('publishedContent') || '[]');
                         content = content.filter(item => item.id != id);
                         localStorage.setItem('publishedContent', JSON.stringify(content));
+                        
+                        // 同时删除交互数据
+                        let interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
+                        delete interactions[id];
+                        localStorage.setItem('contentInteractions', JSON.stringify(interactions));
+                        
                         loadContent(); // 重新加载内容
                     }
                 });

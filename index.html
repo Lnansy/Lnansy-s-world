@@ -1450,9 +1450,9 @@
                     // 然后添加文章的标签
                 if (item.tags && Array.isArray(item.tags)) {
                         item.tags.forEach(tag => allTags.add(tag));
-                    }
-                });
-                
+                }
+            });
+            
                 // 更新标签数量
                 const tagNode = document.getElementById('stat-tag');
                 if (tagNode) tagNode.textContent = allTags.size;
@@ -1565,7 +1565,7 @@
                 } else {
                         // 如果没有内容，显示提示信息
                         alert(`暂无"${category}"分类的内容`);
-                    }
+                }
                 } catch (apiError) {
                     console.error('API请求失败，使用本地数据:', apiError);
                     // API请求失败，使用本地判断结果
@@ -1612,20 +1612,20 @@
                 Object.keys(defaultTags).forEach(tag => {
                     tagCounts[tag] = 0;
                 });
-                
+
                 // 收集分类和标签数据
                 publishedContent.forEach(item => {
                     // 添加分类
                     if (item.category) {
                         tagCounts[item.category] = (tagCounts[item.category] || 0) + 1;
-                    }
-                    
+                }
+
                     // 添加标签
                     if (item.tags && Array.isArray(item.tags)) {
                         item.tags.forEach(tag => {
                             tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-                        });
-                    }
+                    });
+                }
                 });
                 
                 // 获取标签云容器
@@ -1664,10 +1664,10 @@
                 }
                 
                 console.log('[Debug] 标签云已更新');
-            } catch (error) {
+                } catch (error) {
                 console.error('更新标签云失败:', error);
-            }
-        }
+                    }
+                }
     </script>
     
     <!-- 预先填充用户状态，避免闪烁 -->

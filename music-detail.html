@@ -110,26 +110,69 @@
             margin-bottom: 2rem;
         }
 
+        .emoji-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            width: 100%;
+            background: #fff;
+            border-radius: 20px;
+            padding: 0 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .emoji-picker-trigger {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            margin-right: 5px;
+        }
+        
+        .emoji-picker-trigger:hover {
+            color: #007bff;
+        }
+        
+        .emoji-help {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 16px;
+            text-decoration: none;
+        }
+        
+        .emoji-help:hover {
+            color: #007bff;
+        }
+        
         .comment-input {
             flex: 1;
-            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 30px 10px 5px;
+            margin: 0;
             border: none;
-            padding: 10px;
-            border-radius: 5px;
-            color: #fff;
+            background: transparent;
+            outline: none;
+            width: calc(100% - 80px);
         }
-
-        .comment-input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
+        
         .comment-submit {
             background: #007bff;
-            color: #fff;
+            color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 20px;
             cursor: pointer;
+            transition: background 0.3s ease;
+            margin-left: 10px;
+        }
+        
+        .comment-submit:hover {
+            background: #0056b3;
         }
 
         .comments-list {
@@ -246,6 +289,60 @@
             min-width: 100px;
             text-align: center;
         }
+
+        .comment-actions {
+            display: flex;
+            margin-top: 10px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .like-button {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 3px 8px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .like-button:hover {
+            background: rgba(255, 107, 107, 0.1);
+            color: #ff4757;
+        }
+
+        .like-button.liked {
+            color: #ff4757;
+        }
+
+        .like-button.animate-like i {
+            animation: likeAnimation 0.3s ease;
+        }
+
+        @keyframes likeAnimation {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .delete-comment {
+            background: rgba(255, 0, 0, 0.2);
+            color: #fff;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .delete-comment:hover {
+            background: rgba(255, 0, 0, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -292,7 +389,13 @@
             <div class="comments-section">
                 <h2 class="comments-title">评论</h2>
                 <div class="comment-form">
-                    <input type="text" class="comment-input" placeholder="写下你的评论...">
+                    <div class="emoji-input-wrapper">
+                        <button class="emoji-picker-trigger" data-target="comment-input">
+                            <i class="far fa-smile"></i>
+                        </button>
+                        <input type="text" class="comment-input" id="comment-input" placeholder="写下你的评论...">
+                        <a href="emoji-preview.html" class="emoji-help" title="查看所有可用表情" target="_blank"><i class="far fa-question-circle"></i></a>
+                    </div>
                     <button class="comment-submit">发表</button>
                 </div>
                 <div class="comments-list">
@@ -303,13 +406,13 @@
     </div>
 
     <div class="player-controls">
-        <button class="control-btn">
+        <button class="control-btn prev-btn">
             <i class="fas fa-step-backward"></i>
         </button>
         <button class="control-btn play-btn">
             <i class="fas fa-play"></i>
         </button>
-        <button class="control-btn">
+        <button class="control-btn next-btn">
             <i class="fas fa-step-forward"></i>
         </button>
         <div class="progress-container">
@@ -857,16 +960,66 @@
 
         // 初始化音乐播放器
         function initMusicPlayer() {
-            const music = musicData[musicId];
+            // 确保 musicId 是有效值，添加日志用于调试
+            console.log("Debug: Initial musicId =", musicId);
+            const parsedMusicId = parseInt(musicId) || 0; // 如果 musicId 为 null 或 NaN，则默认为 0
+            console.log("Debug: Parsed musicId =", parsedMusicId);
+            
+            const music = musicData[parsedMusicId];
+            console.log("Debug: Current music =", music ? music.title : "Not found");
+            
             const audio = new Audio(music.src);
             const playBtn = document.querySelector('.play-btn');
+            const prevBtn = document.querySelector('.prev-btn');
+            const nextBtn = document.querySelector('.next-btn');
             const progressContainer = document.querySelector('.progress-container');
             const progress = document.querySelector('.progress');
             const timeDisplay = document.querySelector('.time-display');
             const lyricsContainer = document.querySelector('.lyrics');
-            const commentInput = document.querySelector('.comment-input');
+            const commentInput = document.getElementById('comment-input');
             const commentSubmit = document.querySelector('.comment-submit');
             const commentsList = document.querySelector('.comments-list');
+
+            // 添加上一首功能，并为按钮添加样式以显示可点击
+            prevBtn.style.cursor = "pointer";
+            prevBtn.title = "上一首";
+            prevBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // 防止事件冒泡
+                console.log("Debug: prevBtn clicked");
+                const newMusicId = (parsedMusicId - 1 + musicData.length) % musicData.length;
+                console.log("Debug: New music ID =", newMusicId);
+                window.location.href = `music-detail.html?id=${newMusicId}`;
+            });
+
+            // 添加下一首功能，并为按钮添加样式以显示可点击
+            nextBtn.style.cursor = "pointer";
+            nextBtn.title = "下一首";
+            nextBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // 防止事件冒泡
+                console.log("Debug: nextBtn clicked");
+                const newMusicId = (parsedMusicId + 1) % musicData.length;
+                console.log("Debug: New music ID =", newMusicId);
+                window.location.href = `music-detail.html?id=${newMusicId}`;
+            });
+
+            // 键盘控制
+            document.addEventListener('keydown', (e) => {
+                console.log("Debug: Key pressed:", e.code);
+                if (e.code === 'ArrowLeft') {
+                    // 左箭头，上一首
+                    console.log("Debug: Left arrow pressed, navigating to previous song");
+                    prevBtn.click();
+                } else if (e.code === 'ArrowRight') {
+                    // 右箭头，下一首
+                    console.log("Debug: Right arrow pressed, navigating to next song");
+                    nextBtn.click();
+                } else if (e.code === 'Space') {
+                    // 空格，播放/暂停
+                    e.preventDefault(); // 防止页面滚动
+                    console.log("Debug: Space pressed, toggling play/pause");
+                    playBtn.click();
+                }
+            });
 
             // 检查用户登录状态
             function checkLoginStatus() {
@@ -888,7 +1041,7 @@
                 try {
                     // 从localStorage获取评论数据
                     const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
-                    const comments = musicComments[musicId] || [];
+                    const comments = musicComments[parsedMusicId] || [];
                     
                     // 清空评论列表
                     commentsList.innerHTML = '';
@@ -913,6 +1066,13 @@
             function addCommentToDOM(comment) {
                 const commentElement = document.createElement('div');
                 commentElement.className = `comment ${comment.isOwner ? 'owner-comment' : ''}`;
+                
+                // Get current user to check if they've liked this comment
+                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                const username = currentUser ? currentUser.username : null;
+                const likes = comment.likes || [];
+                const isLiked = username && likes.includes(username);
+                
                 commentElement.innerHTML = `
                     <div class="comment-header">
                         <img src="images/头像.jpg" alt="头像" class="comment-avatar" style="width:32px;height:32px;border-radius:50%;margin-right:8px;vertical-align:middle;">
@@ -924,12 +1084,24 @@
                         <span class="comment-time">${new Date(comment.timestamp).toLocaleString()}</span>
                     </div>
                     <div class="comment-content">${comment.content}</div>
-                    ${comment.userId === JSON.parse(localStorage.getItem('currentUser'))?.username ? 
-                        `<button class="delete-comment" data-id="${comment.id}">删除</button>` : ''}
+                    <div class="comment-actions">
+                        <button class="like-button ${isLiked ? 'liked' : ''}" data-id="${comment.id}">
+                            <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
+                            <span>${likes.length || 0}</span>
+                        </button>
+                        ${comment.userId === username ? 
+                            `<button class="delete-comment" data-id="${comment.id}">删除</button>` : ''}
+                    </div>
                 `;
                 commentsList.insertBefore(commentElement, commentsList.firstChild);
 
-                // 添加删除评论的事件监听
+                // Add like event listener
+                const likeBtn = commentElement.querySelector('.like-button');
+                if (likeBtn) {
+                    likeBtn.addEventListener('click', () => handleLikeComment(comment.id));
+                }
+
+                // Add delete event listener
                 const deleteBtn = commentElement.querySelector('.delete-comment');
                 if (deleteBtn) {
                     deleteBtn.addEventListener('click', () => {
@@ -937,9 +1109,9 @@
                             try {
                                 // 从localStorage中删除评论
                                 const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
-                                const comments = musicComments[musicId] || [];
+                                const comments = musicComments[parsedMusicId] || [];
                                 const updatedComments = comments.filter(c => c.id !== comment.id);
-                                musicComments[musicId] = updatedComments;
+                                musicComments[parsedMusicId] = updatedComments;
                                 localStorage.setItem('musicComments', JSON.stringify(musicComments));
                                 
                                 // 从DOM中移除评论
@@ -955,6 +1127,59 @@
                             }
                         }
                     });
+                }
+            }
+
+            // Add the function to handle comment likes
+            function handleLikeComment(commentId) {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                if (!currentUser || currentUser.username === '访客') {
+                    alert('请先登录后再点赞！');
+                    return;
+                }
+
+                const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
+                const comments = musicComments[parsedMusicId] || [];
+                
+                // Find the comment
+                const commentIndex = comments.findIndex(c => c.id === commentId);
+                if (commentIndex === -1) return;
+                
+                // Initialize likes array if it doesn't exist
+                if (!comments[commentIndex].likes) {
+                    comments[commentIndex].likes = [];
+                }
+                
+                // Toggle like
+                const likes = comments[commentIndex].likes;
+                const userIndex = likes.indexOf(currentUser.username);
+                
+                if (userIndex === -1) {
+                    // Add like
+                    likes.push(currentUser.username);
+                } else {
+                    // Remove like
+                    likes.splice(userIndex, 1);
+                }
+                
+                // Update storage
+                musicComments[parsedMusicId] = comments;
+                localStorage.setItem('musicComments', JSON.stringify(musicComments));
+                
+                // Update UI
+                const likeButton = document.querySelector(`.like-button[data-id="${commentId}"]`);
+                if (likeButton) {
+                    const isLiked = userIndex === -1; // If it was -1, we added a like
+                    likeButton.classList.toggle('liked', isLiked);
+                    likeButton.innerHTML = `<i class="fa${isLiked ? 's' : 'r'} fa-heart"></i><span>${likes.length}</span>`;
+                    
+                    // Add animation when liking
+                    if (isLiked) {
+                        likeButton.classList.add('animate-like');
+                        setTimeout(() => {
+                            likeButton.classList.remove('animate-like');
+                        }, 300);
+                    }
                 }
             }
 
@@ -980,14 +1205,15 @@
                         username: currentUser.username,
                         content: content,
                         timestamp: new Date().toISOString(),
-                        isOwner: currentUser.username === 'Lnansy'
+                        isOwner: currentUser.username === 'Lnansy',
+                        likes: []
                     };
 
                     // 保存评论到localStorage
                     const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
-                    const comments = musicComments[musicId] || [];
+                    const comments = musicComments[parsedMusicId] || [];
                     comments.push(newComment);
-                    musicComments[musicId] = comments;
+                    musicComments[parsedMusicId] = comments;
                     localStorage.setItem('musicComments', JSON.stringify(musicComments));
 
                     // 添加评论到DOM
@@ -995,7 +1221,7 @@
                     commentInput.value = '';
 
                     // 触发评论添加事件
-                    const event = new CustomEvent('commentAdded', { detail: { musicId, comment: newComment } });
+                    const event = new CustomEvent('commentAdded', { detail: { musicId: parsedMusicId, comment: newComment } });
                     document.dispatchEvent(event);
                 } catch (error) {
                     console.error('Error posting comment:', error);
@@ -1069,5 +1295,6 @@
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', initMusicPlayer);
     </script>
+    <script src="js/emoji-picker.js"></script>
 </body>
 </html> 

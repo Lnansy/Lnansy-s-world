@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表情符号预览 - Lnansy's World</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: "KaiTi", "楷体", serif;
+            background: url('images/首页.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-size: 16px;
+        }
+
+        .emoji-page {
+            max-width: 800px;
+            margin: 100px auto 50px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .emoji-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .emoji-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .emoji-display {
+            font-size: 50px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .emoji-info {
+            flex-grow: 1;
+        }
+
+        .emoji-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            text-align: center;
+        }
+
+        .emoji-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .usage-examples {
+            margin-top: 10px;
+        }
+
+        .usage-title {
+            font-size: 16px;
+            color: #444;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .usage-example {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .how-to-use {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .how-to-use h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .how-to-use ol {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .how-to-use li {
+            margin-bottom: 10px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">Lnansy</div>
+            <div class="nav-links">
+                <a href="index.html">
+                    <i class="fas fa-home"></i>
+                    <span>首页</span>
+                </a>
+                <a href="records.html">
+                    <i class="fas fa-book"></i>
+                    <span>记录</span>
+                </a>
+                <a href="messages.html">
+                    <i class="fas fa-comment"></i>
+                    <span>留言</span>
+                </a>
+                <a href="music.html">
+                    <i class="fas fa-music"></i>
+                    <span>音乐</span>
+                </a>
+                <a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>关于我</span>
+                </a>
+                <div id="userSection">
+                    <!-- 用户登录状态将在这里动态添加 -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="emoji-page">
+        <div class="page-header">
+            <h1>表情符号预览</h1>
+            <p>在评论和留言时使用这些表情符号让沟通更加生动有趣</p>
+        </div>
+
+        <div class="how-to-use">
+            <h2>如何使用表情符号</h2>
+            <ol>
+                <li>在评论框或留言框中，点击微笑图标 <i class="far fa-smile"></i> 打开表情选择器</li>
+                <li>从表情选择器中点击您想要的表情</li>
+                <li>表情会自动插入到您的评论或留言中</li>
+                <li>完成评论后点击发送按钮发布您的评论</li>
+            </ol>
+        </div>
+
+        <div class="emoji-grid" id="emojiGrid">
+            <!-- 表情符号卡片将通过JavaScript动态生成 -->
+        </div>
+
+        <a href="javascript:history.back()" class="back-link">
+            <i class="fas fa-arrow-left"></i> 返回上一页
+        </a>
+    </main>
+
+    <!-- 底部版权信息 -->
+    <footer>
+        <div class="footer-content">
+            <p>© 2025 Lnansy. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 表情符号数据
+        const emojis = [
+            { 
+                emoji: '🤒', 
+                name: '发烧', 
+                description: '代表生病、发烧状态。表达自己身体不适，正在发烧或感冒。', 
+                examples: ['今天感冒了，发高烧在家休息 🤒', '头好痛，感觉自己要烧起来了 🤒'] 
+            },
+            { 
+                emoji: '🤔', 
+                name: '思考', 
+                description: '表示深思熟虑或困惑。当你在思考问题或对某事表示怀疑时使用。', 
+                examples: ['这个问题让我很困惑 🤔', '我在思考下一步该怎么走 🤔'] 
+            },
+            { 
+                emoji: '🤗', 
+                name: '拥抱', 
+                description: '表示温暖、友好的拥抱。用于表达喜悦、支持或感谢。', 
+                examples: ['谢谢你的支持 🤗', '真为你感到高兴 🤗'] 
+            },
+            { 
+                emoji: '🤡', 
+                name: '小丑', 
+                description: '代表小丑或滑稽的行为。可用于自嘲或形容搞笑的情况。', 
+                examples: ['我今天真是太糗了 🤡', '别闹了，小丑 🤡'] 
+            },
+            { 
+                emoji: '🤪', 
+                name: '搞怪', 
+                description: '表示疯狂、古怪或滑稽的心情。用于表达开玩笑或不严肃的态度。', 
+                examples: ['周五了，感觉整个人都疯了 🤪', '这个笑话太好笑了 🤪'] 
+            },
+            { 
+                emoji: '😀', 
+                name: '笑脸', 
+                description: '表示开心和欢乐。是一个标准的微笑表情，适用于大多数积极场合。', 
+                examples: ['今天过得很开心 😀', '见到你真高兴 😀'] 
+            },
+            { 
+                emoji: '😊', 
+                name: '微笑', 
+                description: '带着羞涩的微笑。表达温暖、友好或略带害羞的喜悦。', 
+                examples: ['收到你的礼物很开心 😊', '谢谢你的夸奖 😊'] 
+            },
+            { 
+                emoji: '😨', 
+                name: '害怕', 
+                description: '表示惊恐或害怕。当遇到可怕或令人震惊的事情时使用。', 
+                examples: ['刚才差点出车祸 😨', '这个恐怖片太吓人了 😨'] 
+            },
+            { 
+                emoji: '😪', 
+                name: '困倦', 
+                description: '表示疲惫或困倦。适用于表达睡意或精疲力竭的状态。', 
+                examples: ['工作了一整天，好累 😪', '昨晚没睡好，一直打瞌睡 😪'] 
+            },
+            { 
+                emoji: '😭', 
+                name: '哭泣', 
+                description: '表示强烈的悲伤或痛苦。适用于表达极度难过或感动落泪的情况。', 
+                examples: ['这部电影的结局太感人了 😭', '考试没通过，好难过 😭'] 
+            }
+        ];
+
+        // 生成表情符号卡片
+        function generateEmojiCards() {
+            const emojiGrid = document.getElementById('emojiGrid');
+            
+            emojis.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'emoji-card';
+                
+                let examplesHtml = '';
+                if (item.examples && item.examples.length > 0) {
+                    examplesHtml = `
+                        <div class="usage-examples">
+                            <div class="usage-title">使用示例:</div>
+                            ${item.examples.map(example => `<div class="usage-example">${example}</div>`).join('')}
+                        </div>
+                    `;
+                }
+                
+                card.innerHTML = `
+                    <div class="emoji-display">${item.emoji}</div>
+                    <div class="emoji-info">
+                        <div class="emoji-name">${item.name}</div>
+                        <div class="emoji-description">${item.description}</div>
+                        ${examplesHtml}
+                    </div>
+                `;
+                
+                emojiGrid.appendChild(card);
+            });
+        }
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            generateEmojiCards();
+            
+            // 更新用户登录状态
+            function updateUserSection() {
+                const userSection = document.getElementById('userSection');
+                
+                try {
+                    const user = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+                    
+                    if (user && user.username !== '访客') {
+                        userSection.innerHTML = `
+                            <div class="user-profile">
+                                <div class="user-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span>${user.username}</span>
+                                <div class="user-menu">
+                                    <a href="#" class="user-menu-item" id="logoutBtn">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>退出登录</span>
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // 添加登出功能
+                        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                            e.preventDefault();
+                            localStorage.removeItem('authToken');
+                            localStorage.removeItem('currentUser');
+                            window.location.reload();
+                        });
+                    } else {
+                        userSection.innerHTML = `
+                            <a href="login.html">登录</a>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('更新用户状态失败:', error);
+                    userSection.innerHTML = `
+                        <a href="login.html">登录</a>
+                    `;
+                }
+            }
+            
+            updateUserSection();
+        });
+    </script>
+</body>
+</html> 

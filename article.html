@@ -158,16 +158,49 @@
             margin-top: 30px;
         }
 
+        .emoji-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .emoji-picker-trigger {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            margin-right: 5px;
+        }
+
+        .emoji-picker-trigger:hover {
+            color: #007bff;
+        }
+
+        .emoji-help {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 16px;
+            text-decoration: none;
+        }
+
+        .emoji-help:hover {
+            color: #007bff;
+        }
+
         .comment-form textarea {
-            width: 100%;
-            min-height: 100px;
-            padding: 15px;
+            flex: 1;
+            padding: 10px;
+            margin: 0;
             border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            border-radius: 4px;
             resize: vertical;
-            font-family: inherit;
-            font-size: 1rem;
+            min-height: 80px;
         }
 
         .comment-form button {
@@ -214,6 +247,40 @@
         .back-button:hover {
             background: rgba(0,0,0,0.05);
             color: #333;
+        }
+
+        .comment-actions {
+            display: flex;
+            margin-top: 10px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comment-like-button {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: transparent;
+            border: none;
+            color: rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 3px 8px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .comment-like-button:hover {
+            background: rgba(255, 107, 107, 0.1);
+            color: #ff4757;
+        }
+
+        .comment-like-button.liked {
+            color: #ff4757;
+        }
+
+        .comment-like-button.animate-like i {
+            animation: likeAnimation 0.3s ease;
         }
     </style>
 </head>
@@ -355,21 +422,37 @@
                 <div class="comments-section">
                     <h3 class="comments-header">评论 (${articleInteractions.comments.length})</h3>
                     <div class="comments-list">
-                        ${articleInteractions.comments.map(comment => `
-                            <div class="comment ${comment.isOwner ? 'owner-comment' : ''}">
-                                <div class="comment-header">
-                                    <span class="comment-author">
-                                        ${comment.userId}
-                                        ${comment.isOwner ? '<span class="owner-badge">博主</span>' : ''}
-                                    </span>
-                                    <span class="comment-date">${new Date(comment.timestamp).toLocaleString()}</span>
+                        ${articleInteractions.comments.map(comment => {
+                            const likes = comment.likes || [];
+                            const isLikedByCurrentUser = currentUser && currentUser.username !== '访客' && likes.includes(currentUser.username);
+                            return `
+                                <div class="comment ${comment.isOwner ? 'owner-comment' : ''}" data-id="${comment.id}">
+                                    <div class="comment-header">
+                                        <span class="comment-author">
+                                            ${comment.userId}
+                                            ${comment.isOwner ? '<span class="owner-badge">博主</span>' : ''}
+                                        </span>
+                                        <span class="comment-date">${new Date(comment.timestamp).toLocaleString()}</span>
+                                    </div>
+                                    <div class="comment-content">${comment.content}</div>
+                                    <div class="comment-actions">
+                                        <button class="comment-like-button ${isLikedByCurrentUser ? 'liked' : ''}" onclick="handleCommentLike('${article.id}', '${comment.id}')">
+                                            <i class="fa${isLikedByCurrentUser ? 's' : 'r'} fa-heart"></i>
+                                            <span>${likes.length}</span>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="comment-content">${comment.content}</div>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                     <div class="comment-form">
-                        <textarea placeholder="写下你的评论..." id="commentInput"></textarea>
+                        <div class="emoji-input-wrapper">
+                            <button class="emoji-picker-trigger" data-target="commentInput">
+                                <i class="far fa-smile"></i>
+                            </button>
+                            <textarea placeholder="写下你的评论..." id="commentInput"></textarea>
+                            <a href="emoji-preview.html" class="emoji-help" title="查看所有可用表情" target="_blank"><i class="far fa-question-circle"></i></a>
+                        </div>
                         <button onclick="submitComment('${article.id}')">发表评论</button>
                     </div>
                 </div>
@@ -466,7 +549,8 @@
                 userId: currentUser.username,
                 content: comment,
                 timestamp: Date.now(),
-                isOwner: true // 标记为博主评论
+                isOwner: currentUser.username === 'Lnansy', // 标记为博主评论
+                likes: [] // Initialize likes array
             };
 
             interactions[articleId].comments.push(newComment);
@@ -475,6 +559,63 @@
             // 重新加载文章以显示新评论
             loadArticle(articleId);
             commentInput.value = ''; // 清空评论框
+        }
+
+        async function handleCommentLike(articleId, commentId) {
+            if (!currentUser || currentUser.username === '访客') {
+                alert('请先登录后再点赞！');
+                return;
+            }
+
+            const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
+            if (!interactions[articleId]) {
+                interactions[articleId] = { views: 0, likes: [], comments: [] };
+                return;
+            }
+
+            // Find the comment
+            const commentIndex = interactions[articleId].comments.findIndex(c => String(c.id) === String(commentId));
+            if (commentIndex === -1) return;
+
+            // Initialize likes array if it doesn't exist
+            if (!interactions[articleId].comments[commentIndex].likes) {
+                interactions[articleId].comments[commentIndex].likes = [];
+            }
+
+            const comment = interactions[articleId].comments[commentIndex];
+            const likes = comment.likes;
+            const userIndex = likes.indexOf(currentUser.username);
+
+            if (userIndex === -1) {
+                // Add like
+                likes.push(currentUser.username);
+            } else {
+                // Remove like
+                likes.splice(userIndex, 1);
+            }
+
+            // Update storage
+            localStorage.setItem('contentInteractions', JSON.stringify(interactions));
+
+            // Update UI
+            const commentElement = document.querySelector(`.comment[data-id="${commentId}"]`);
+            if (commentElement) {
+                const likeButton = commentElement.querySelector('.comment-like-button');
+                const likeCount = likeButton.querySelector('span');
+                const isLiked = userIndex === -1; // If it was -1, we added a like
+                
+                likeButton.classList.toggle('liked', isLiked);
+                likeButton.querySelector('i').className = `fa${isLiked ? 's' : 'r'} fa-heart`;
+                likeCount.textContent = likes.length;
+                
+                // Add animation when liking
+                if (isLiked) {
+                    likeButton.classList.add('animate-like');
+                    setTimeout(() => {
+                        likeButton.classList.remove('animate-like');
+                    }, 300);
+                }
+            }
         }
 
         function updateUserSection() {
@@ -499,5 +640,6 @@
             window.location.reload();
         }
     </script>
+    <script src="js/emoji-picker.js"></script>
 </body>
 </html> 

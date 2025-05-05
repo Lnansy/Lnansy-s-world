@@ -197,6 +197,23 @@
                 opacity: 0;
             }
         }
+
+        .emoji-note {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 0.5rem;
+        }
+
+        .emoji-note a {
+            color: #9cc9ff;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .emoji-note a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -228,32 +245,15 @@
     <div class="music-page">
         <div class="page-header">
             <h1 style="font-family: KaiTi, '楷体', STKaiti, '华文楷体', serif; margin-bottom: 0.5rem;">音乐播放器</h1>
-            <p style="font-family: 'Ma Shan Zheng', cursive; font-size: 1.5em;">寻访长沙名医vae</p>
         </div>
         
         <div class="music-container">
             <div class="music-player">
                 <div class="current-song">
-                    <h2 class="song-title">歌曲名称</h2>
-                    <p class="song-artist">艺术家</p>
+                    <h2 class="song-title">寻访长沙名医vae</h2>
+                    <p class="song-artist">许嵩音乐精选集</p>
                 </div>
                 
-                <div class="controls">
-                    <button class="control-btn">
-                        <i class="fas fa-step-backward"></i>
-                    </button>
-                    <button class="control-btn play-btn">
-                        <i class="fas fa-play"></i>
-                    </button>
-                    <button class="control-btn">
-                        <i class="fas fa-step-forward"></i>
-                    </button>
-                    <div class="progress-bar">
-                        <div class="progress"></div>
-                    </div>
-                    <span class="time">0:00 / 0:00</span>
-                </div>
-
                 <div class="playlist">
                     <!-- 歌曲列表将在这里动态添加 -->
                 </div>
@@ -369,19 +369,16 @@
             }
         ];
 
-        // 初始化音乐播放器
+        // 修改初始化音乐播放器函数，取消自动播放功能
         function initMusicPlayer() {
             const playlist = document.querySelector('.playlist');
             const currentSongTitle = document.querySelector('.current-song .song-title');
             const currentSongArtist = document.querySelector('.current-song .song-artist');
-            const playBtn = document.querySelector('.play-btn');
-            const progressBar = document.querySelector('.progress-bar');
-            const progress = document.querySelector('.progress');
-            const timeDisplay = document.querySelector('.time');
 
-            let currentSongIndex = 0;
-            let isPlaying = false;
-            let audio = new Audio();
+            // 设置标题
+            currentSongTitle.textContent = "寻访长沙名医vae";
+            currentSongTitle.style.fontFamily = "KaiTi, '楷体', STKaiti, '华文楷体', serif";
+            currentSongArtist.textContent = "许嵩音乐精选集";
 
             // 创建播放列表
             musicData.forEach((song, index) => {
@@ -396,76 +393,11 @@
                 `;
                 playlist.appendChild(songItem);
 
-                // 点击歌曲切换
+                // 点击歌曲跳转到详情页
                 songItem.addEventListener('click', () => {
                     window.location.href = `music-detail.html?id=${index}`;
                 });
             });
-
-            // 加载歌曲
-            function loadSong(index) {
-                const song = musicData[index];
-                audio.src = song.src;
-                currentSongTitle.textContent = song.title;
-                currentSongArtist.textContent = song.artist;
-                
-                // 更新播放列表选中状态
-                document.querySelectorAll('.song-item').forEach((item, i) => {
-                    item.classList.toggle('active', i === index);
-                });
-            }
-
-            // 播放歌曲
-            function playSong() {
-                isPlaying = true;
-                audio.play();
-                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            }
-
-            // 暂停歌曲
-            function pauseSong() {
-                isPlaying = false;
-                audio.pause();
-                playBtn.innerHTML = '<i class="fas fa-play"></i>';
-            }
-
-            // 播放/暂停按钮点击事件
-            playBtn.addEventListener('click', () => {
-                if (isPlaying) {
-                    pauseSong();
-                } else {
-                    playSong();
-                }
-            });
-
-            // 更新进度条
-            audio.addEventListener('timeupdate', () => {
-                const progressPercent = (audio.currentTime / audio.duration) * 100;
-                progress.style.width = `${progressPercent}%`;
-
-                // 更新时间显示
-                const currentMinutes = Math.floor(audio.currentTime / 60);
-                const currentSeconds = Math.floor(audio.currentTime % 60);
-                const durationMinutes = Math.floor(audio.duration / 60);
-                const durationSeconds = Math.floor(audio.duration % 60);
-                timeDisplay.textContent = `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} / ${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
-            });
-
-            // 点击进度条跳转
-            progressBar.addEventListener('click', (e) => {
-                const progressPercent = (e.offsetX / progressBar.offsetWidth);
-                audio.currentTime = progressPercent * audio.duration;
-            });
-
-            // 歌曲结束自动播放下一首
-            audio.addEventListener('ended', () => {
-                currentSongIndex = (currentSongIndex + 1) % musicData.length;
-                loadSong(currentSongIndex);
-                playSong();
-            });
-
-            // 加载第一首歌
-            loadSong(currentSongIndex);
         }
 
         // 页面加载完成后初始化
