@@ -145,6 +145,23 @@
             color: #007bff;
         }
 
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         #userSection:empty {
             display: none;
         }
@@ -258,7 +275,7 @@
                 userSection.innerHTML = `
                     <div class="user-profile">
                         <div class="user-avatar">
-                            <i class="fas fa-user"></i>
+                            <img src="images/头像.jpg" alt="用户头像">
                         </div>
                         <span>${currentUser.username}</span>
                         <div class="user-menu">
@@ -318,7 +335,7 @@
                     document.getElementById('userSection').innerHTML = `
                         <div class="user-profile">
                             <div class="user-avatar">
-                                <i class="fas fa-user"></i>
+                                <img src="images/头像.jpg" alt="用户头像">
                             </div>
                             <span>${user.username}</span>
                             <div class="user-menu">

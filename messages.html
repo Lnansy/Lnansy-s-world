@@ -696,6 +696,83 @@
             z-index: 10;
             font-family: SimSun, "宋体", serif;
         }
+
+        /* 用户头像和菜单样式 */
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .user-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 10px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .user-menu.active {
+            display: block;
+        }
+
+        .user-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            color: #333;
+            text-decoration: none;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .user-menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        .login-link {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #fff;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+
+        .login-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -720,6 +797,13 @@
                     <i class="fas fa-music"></i>
                     <span>音乐</span>
                 </a>
+                <a href="about.html">
+                    <i class="fas fa-user"></i>
+                    <span>关于我</span>
+                </a>
+                <div id="userSection">
+                    <!-- 用户登录状态将在这里动态添加 -->
+                </div>
             </div>
         </div>
     </nav>
@@ -743,7 +827,7 @@
                         <button class="emoji-picker-trigger" data-target="danmaku-input">
                             <i class="far fa-smile"></i>
                         </button>
-                        <input type="text" placeholder="输入留言..." id="danmaku-input">
+                    <input type="text" placeholder="输入留言..." id="danmaku-input">
                     </div>
                     <button id="danmaku-send">发送</button>
                     <a href="emoji-preview.html" class="emoji-help" title="查看所有可用表情" target="_blank"><i class="far fa-question-circle"></i></a>
@@ -804,6 +888,7 @@
         const messageList = document.getElementById('message-list');
         const messageSort = document.getElementById('message-sort');
         const clearMessagesBtn = document.getElementById('clear-messages');
+        const userSection = document.getElementById('userSection');
 
         let danmakuSpeed = 'normal';
         const speedMap = {
@@ -816,6 +901,57 @@
 
         // 从localStorage加载历史留言
         let storedMessages = JSON.parse(localStorage.getItem('messageHistory') || '[]');
+
+        // 更新用户区域
+        function updateUserSection() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+            
+            if (currentUser && currentUser.username !== '访客') {
+                userSection.innerHTML = `
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <img src="images/头像.jpg" alt="用户头像">
+                        </div>
+                        <span>${currentUser.username}</span>
+                        <div class="user-menu">
+                            <a href="#" class="user-menu-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>退出登录</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                // 添加登出功能
+                document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    window.location.reload();
+                });
+
+                // 添加用户菜单显示/隐藏功能
+                const userProfile = document.querySelector('.user-profile');
+                const userMenu = document.querySelector('.user-menu');
+
+                userProfile.addEventListener('click', () => {
+                    userMenu.classList.toggle('active');
+                });
+
+                // 点击其他地方关闭菜单
+                document.addEventListener('click', (e) => {
+                    if (!userProfile.contains(e.target)) {
+                        userMenu.classList.remove('active');
+                    }
+                });
+            } else {
+                userSection.innerHTML = `
+                    <a href="login.html" class="login-link">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>登录</span>
+                    </a>
+                `;
+            }
+        }
 
         // 随机颜色生成
         function getRandomColor() {
@@ -957,7 +1093,7 @@
                 messageElement.innerHTML = `
                     <div class="message-header">
                         <div class="message-author">
-                            <i class="fas fa-user-circle"></i>
+                            <img src="images/头像.jpg" alt="用户头像" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
                             ${message.author}
                             ${isBloggerMessage ? '<span style="margin-left:5px;font-size:0.8em;background:#ff9800;color:white;padding:1px 5px;border-radius:3px;">博主</span>' : ''}
                         </div>
@@ -1010,75 +1146,78 @@
         
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', () => {
+            // 更新用户登录状态
+            updateUserSection();
+            
             // 显示已保存的留言
             displayMessages();
             
             // 只有在没有历史记录的情况下才添加初始弹幕
             if (storedMessages.length === 0) {
                 // 添加初始示例弹幕并保存到历史记录
-                initialDanmakus.forEach(text => {
-                    if (danmakuCount < maxDanmaku) {
-                        const danmaku = document.createElement('div');
-                        danmaku.className = 'danmaku-item';
-                        danmaku.textContent = text;
-                        danmaku.style.backgroundColor = getRandomColor();
-                        danmaku.style.animationDuration = `${speedMap[danmakuSpeed]}s`;
-                        danmaku.style.top = `${Math.random() * 80}%`;
-                        danmakuDisplay.appendChild(danmaku);
-                        danmakuCount++;
+            initialDanmakus.forEach(text => {
+                if (danmakuCount < maxDanmaku) {
+                    const danmaku = document.createElement('div');
+                    danmaku.className = 'danmaku-item';
+                    danmaku.textContent = text;
+                    danmaku.style.backgroundColor = getRandomColor();
+                    danmaku.style.animationDuration = `${speedMap[danmakuSpeed]}s`;
+                    danmaku.style.top = `${Math.random() * 80}%`;
+                    danmakuDisplay.appendChild(danmaku);
+                    danmakuCount++;
 
-                        // 只有当弹幕数量超过上限时才移除
-                        if (danmakuCount > maxDanmaku) {
-                            danmaku.addEventListener('animationend', () => {
-                                danmaku.remove();
-                                danmakuCount--;
-                            });
-                        }
-                        
-                        // 保存初始弹幕到历史记录
-                        const newMessage = {
-                            id: Date.now() + Math.floor(Math.random() * 1000),
-                            author: '系统',
-                            content: text,
-                            timestamp: new Date().toISOString()
-                        };
-                        
-                        storedMessages.push(newMessage);
+                    // 只有当弹幕数量超过上限时才移除
+                    if (danmakuCount > maxDanmaku) {
+                        danmaku.addEventListener('animationend', () => {
+                            danmaku.remove();
+                            danmakuCount--;
+                        });
                     }
-                });
-                
-                // 保存到localStorage
-                localStorage.setItem('messageHistory', JSON.stringify(storedMessages));
-                
-                // 更新历史留言显示
-                displayMessages();
-            } else {
-                // 如果有历史记录，则将部分历史记录显示为弹幕
-                const recentMessages = [...storedMessages]
-                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                    .slice(0, 5);
+                            
+                            // 保存初始弹幕到历史记录
+                            const newMessage = {
+                                id: Date.now() + Math.floor(Math.random() * 1000),
+                                author: '系统',
+                                content: text,
+                                timestamp: new Date().toISOString()
+                            };
+                            
+                            storedMessages.push(newMessage);
+                        }
+                    });
                     
-                recentMessages.forEach(message => {
-                    if (danmakuCount < maxDanmaku) {
-                        const danmaku = document.createElement('div');
-                        danmaku.className = 'danmaku-item';
-                        danmaku.textContent = message.content;
-                        danmaku.style.backgroundColor = getRandomColor();
-                        danmaku.style.animationDuration = `${speedMap[danmakuSpeed]}s`;
-                        danmaku.style.top = `${Math.random() * 80}%`;
-                        danmakuDisplay.appendChild(danmaku);
-                        danmakuCount++;
+                    // 保存到localStorage
+                    localStorage.setItem('messageHistory', JSON.stringify(storedMessages));
+                    
+                    // 更新历史留言显示
+                    displayMessages();
+                } else {
+                    // 如果有历史记录，则将部分历史记录显示为弹幕
+                    const recentMessages = [...storedMessages]
+                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                        .slice(0, 5);
                         
-                        if (danmakuCount > maxDanmaku) {
-                            danmaku.addEventListener('animationend', () => {
-                                danmaku.remove();
-                                danmakuCount--;
-                            });
+                    recentMessages.forEach(message => {
+                        if (danmakuCount < maxDanmaku) {
+                            const danmaku = document.createElement('div');
+                            danmaku.className = 'danmaku-item';
+                            danmaku.textContent = message.content;
+                            danmaku.style.backgroundColor = getRandomColor();
+                            danmaku.style.animationDuration = `${speedMap[danmakuSpeed]}s`;
+                            danmaku.style.top = `${Math.random() * 80}%`;
+                            danmakuDisplay.appendChild(danmaku);
+                            danmakuCount++;
+                            
+                            if (danmakuCount > maxDanmaku) {
+                                danmaku.addEventListener('animationend', () => {
+                                    danmaku.remove();
+                                    danmakuCount--;
+                                });
+                            }
                         }
-                    }
-                });
-            }
-        });
+                    });
+                }
+            });
 
         // 添加删除留言的函数
         function deleteMessage(messageId) {

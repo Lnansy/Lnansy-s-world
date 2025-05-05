@@ -273,6 +273,23 @@
             padding: 2px;
             border-radius: 2px;
         }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
@@ -342,8 +359,8 @@
                 </h2>
                 <div class="essay-list" id="essayList">
                     <!-- 内容将通过JavaScript动态添加 -->
-        </div>
-    </div>
+                </div>
+            </div>
 
             <!-- 文章部分 -->
             <div class="card" id="articleSection">
@@ -382,7 +399,7 @@
                 userSection.innerHTML = `
                     <div class="user-profile">
                         <div class="user-avatar">
-                            <i class="fas fa-user"></i>
+                            <img src="images/头像.jpg" alt="用户头像">
                         </div>
                         <span>${currentUser.username}</span>
                         <div class="user-menu">
@@ -433,6 +450,7 @@
             const articleList = document.getElementById('articleList');
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
             const searchResults = document.getElementById('searchResults');
+            const isAdmin = currentUser.username === 'Lnansy'; // 检查是否为博主
 
             // 清空现有内容
             essayList.innerHTML = '';
@@ -453,9 +471,23 @@
                 searchResults.innerHTML = `找到 ${filteredContent.length} 条相关内容`;
             }
 
+            // 根据用户类型筛选内容
+            // 博主可以看到所有内容，访客只能看到文章
+            if (!isAdmin) {
+                filteredContent = filteredContent.filter(item => item.type === 'article');
+            }
+
             if (filteredContent.length === 0) {
-                essayList.innerHTML = '<div class="no-content">暂无随笔</div>';
-                articleList.innerHTML = '<div class="no-content">暂无文章</div>';
+                if (isAdmin || document.querySelector('.filter-button.active').dataset.type !== 'essay') {
+                    articleList.innerHTML = '<div class="no-content">暂无文章</div>';
+                }
+                
+                if (isAdmin) {
+                    essayList.innerHTML = '<div class="no-content">暂无随笔</div>';
+                } else {
+                    essayList.innerHTML = '<div class="no-content">随笔仅对博主可见</div>';
+                }
+                
                 if (searchTerm) {
                     searchResults.innerHTML = '未找到相关内容';
                 }
@@ -503,7 +535,10 @@
                 `;
 
                 if (item.type === 'essay') {
-                    essayList.innerHTML += itemHtml;
+                    // 只有博主才显示随笔
+                    if (isAdmin) {
+                        essayList.innerHTML += itemHtml;
+                    }
                 } else {
                     articleList.innerHTML += itemHtml;
                 }
@@ -532,6 +567,9 @@
         // 分类筛选功能
         document.querySelectorAll('.filter-button').forEach(button => {
             button.addEventListener('click', () => {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+                const isAdmin = currentUser.username === 'Lnansy'; // 检查是否为博主
+                
                 // 更新按钮状态
                 document.querySelectorAll('.filter-button').forEach(btn => {
                     btn.classList.remove('active');
@@ -541,10 +579,26 @@
                 // 根据类型显示/隐藏内容
                 const type = button.dataset.type;
                 if (type === 'all') {
-                    document.getElementById('essaySection').style.display = 'block';
                     document.getElementById('articleSection').style.display = 'block';
+                    
+                    // 只有博主可以看随笔
+                    if (isAdmin) {
+                        document.getElementById('essaySection').style.display = 'block';
+                    } else {
+                        document.getElementById('essaySection').style.display = 'none';
+                    }
                 } else if (type === 'essay') {
-                    document.getElementById('essaySection').style.display = 'block';
+                    // 只有博主可以看随笔
+                    if (isAdmin) {
+                        document.getElementById('essaySection').style.display = 'block';
+                    } else {
+                        document.getElementById('essaySection').style.display = 'none';
+                        // 如果非博主点击了随笔标签，提示权限不足
+                        alert('随笔内容仅对博主开放');
+                        // 重置为全部标签
+                        document.querySelector('.filter-button[data-type="all"]').click();
+                        return;
+                    }
                     document.getElementById('articleSection').style.display = 'none';
                 } else {
                     document.getElementById('essaySection').style.display = 'none';
@@ -570,6 +624,31 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateUserSection();
             loadContent();
+            
+            // 检查用户身份，非博主隐藏随笔相关功能
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+            const isAdmin = currentUser.username === 'Lnansy'; // 检查是否为博主
+            
+            if (!isAdmin) {
+                // 隐藏添加随笔按钮
+                const essaySection = document.getElementById('essaySection');
+                if (essaySection) {
+                    // 只隐藏添加按钮，保留标题
+                    const addEssayBtn = document.getElementById('addEssayBtn');
+                    if (addEssayBtn) {
+                        addEssayBtn.style.display = 'none';
+                    }
+                    
+                    // 更新随笔区域的标题
+                    const cardTitle = essaySection.querySelector('.card-title');
+                    if (cardTitle) {
+                        cardTitle.innerHTML = '随笔 <small style="font-size: 12px; color: #999;">(仅博主可见)</small>';
+                    }
+                    
+                    // 默认隐藏随笔区域
+                    essaySection.style.display = 'none';
+                }
+            }
         });
 
         // 添加按钮功能
