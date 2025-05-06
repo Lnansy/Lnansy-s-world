@@ -437,7 +437,7 @@
             updateUserSection();
         });
 
-        function loadArticle(articleId) {
+        async function loadArticle(articleId) {
             // 再次检查用户状态，确保最新
             currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
             
@@ -458,177 +458,175 @@
                 return;
             }
 
-            const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
-            const article = publishedContent.find(item => String(item.id) === String(articleId));
-            const articleContentNode = document.getElementById('articleContent');
-            
-            if (!articleContentNode) return;
-            
-            if (!article) {
-                articleContentNode.innerHTML = '<p class="error">文章不存在或已被删除</p>';
-                return;
-            }
-            
-            console.log('文章数据:', article); // 添加调试输出
-            
-            // 默认类型处理 - 如果没有type字段，根据其他信息判断
-            if (!article.type) {
-                // 这里根据URL或者其他信息来判断文章类型
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.has('type')) {
-                    article.type = urlParams.get('type');
-                } else {
-                    // 默认设置为article类型
-                    article.type = 'article';
+            try {
+                // 从API获取文章内容
+                const articleResponse = await fetch(`/api/articles/${articleId}`);
+                if (!articleResponse.ok) {
+                    throw new Error('获取文章失败');
                 }
-            }
-
-            // 检查当前用户是否有权限查看该随笔
-            // 访客只能看博主和本人发布的随笔
-            if (article.type === 'essay') {
-                // 博主可以看所有随笔
-                if (currentUser.username === 'Lnansy') {
-                    // 博主有权限查看所有随笔，无需处理
+                const article = await articleResponse.json();
+                
+                // 获取文章交互数据（点赞、评论等）
+                const interactionsResponse = await fetch(`/api/articles/${articleId}/interactions`);
+                if (!interactionsResponse.ok) {
+                    throw new Error('获取文章交互数据失败');
                 }
-                // 普通用户只能看自己发布的随笔和博主的随笔
-                else if (article.author !== currentUser.username && article.author !== 'Lnansy') {
-                    articleContentNode.innerHTML = `
-                        <div style="text-align: center; padding: 40px 20px;">
-                            <i class="fas fa-lock" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
-                            <h2>没有查看权限</h2>
-                            <p>您只能查看博主和自己发布的随笔</p>
-                            <a href="records.html" class="action-button" style="display: inline-flex; margin-top: 20px; text-decoration: none; background: #007bff; color: white; padding: 10px 20px; border-radius: 5px;">
-                                <i class="fas fa-arrow-left" style="margin-right: 8px;"></i>
-                                <span>返回记录</span>
-                            </a>
-                        </div>
-                    `;
+                const articleInteractions = await interactionsResponse.json();
+                
+                const articleContentNode = document.getElementById('articleContent');
+                if (!articleContentNode) return;
+                
+                if (!article) {
+                    articleContentNode.innerHTML = '<p class="error">文章不存在或已被删除</p>';
                     return;
                 }
-            }
-
-            const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
-            const articleInteractions = interactions[articleId] || { views: 0, likes: [], comments: [] };
-            const isLiked = currentUser && articleInteractions.likes.includes(currentUser.username);
-
-            // 更新浏览量
-            if (!articleInteractions.views) articleInteractions.views = 0;
-            articleInteractions.views += 1;
-            interactions[articleId] = articleInteractions;
-            localStorage.setItem('contentInteractions', JSON.stringify(interactions));
-
-            // 附件兼容处理
-            let attachmentsArr = [];
-            if (Array.isArray(article.attachments)) {
-                attachmentsArr = article.attachments;
-            } else if (typeof article.attachments === 'string') {
-                try {
-                    attachmentsArr = JSON.parse(article.attachments);
-                } catch (e) {
-                    attachmentsArr = [];
+                
+                console.log('文章数据:', article); // 添加调试输出
+                
+                // 检查当前用户是否有权限查看该随笔
+                // 访客只能看博主和本人发布的随笔
+                if (article.type === 'essay') {
+                    // 博主可以看所有随笔
+                    if (currentUser.username === 'Lnansy') {
+                        // 博主有权限查看所有随笔，无需处理
+                    }
+                    // 普通用户只能看自己发布的随笔和博主的随笔
+                    else if (article.author !== currentUser.username && article.author !== 'Lnansy') {
+                        articleContentNode.innerHTML = `
+                            <div style="text-align: center; padding: 40px 20px;">
+                                <i class="fas fa-lock" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
+                                <h2>没有查看权限</h2>
+                                <p>您只能查看博主和自己发布的随笔</p>
+                                <a href="records.html" class="action-button" style="display: inline-flex; margin-top: 20px; text-decoration: none; background: #007bff; color: white; padding: 10px 20px; border-radius: 5px;">
+                                    <i class="fas fa-arrow-left" style="margin-right: 8px;"></i>
+                                    <span>返回记录</span>
+                                </a>
+                            </div>
+                        `;
+                        return;
+                    }
                 }
-            }
 
-            const articleHtml = `
-                <header class="article-header">
-                    <h1 class="article-title">${article.title}</h1>
-                    <div class="article-meta">
-                        <span><i class="far fa-calendar"></i> ${new Date(article.date).toLocaleDateString()}</span>
-                        <span>
-                            ${article.author === 'Lnansy' ? 
-                              `<div class="article-avatar">
-                                <img src="images/3.png" alt="博主头像">
-                               </div>` : 
-                              `<i class="far fa-user"></i>`
-                            }
-                            ${article.author}
-                        </span>
-                        <span><i class="far fa-eye"></i> ${articleInteractions.views} 次浏览</span>
-                        ${currentUser.username === article.author ? `
-                            <button onclick="deleteArticle('${article.id}')" class="delete-btn">
-                                <i class="fas fa-trash"></i>
-                                <span>删除</span>
-                            </button>
-                        ` : ''}
+                const isLiked = articleInteractions.likes.includes(currentUser.username);
+
+                // 更新浏览量
+                fetch(`/api/articles/${articleId}/view`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({ username: currentUser.username })
+                });
+
+                // 附件兼容处理
+                let attachmentsArr = article.attachments || [];
+
+                const articleHtml = `
+                    <header class="article-header">
+                        <h1 class="article-title">${article.title}</h1>
+                        <div class="article-meta">
+                            <span><i class="far fa-calendar"></i> ${new Date(article.date).toLocaleDateString()}</span>
+                            <span>
+                                ${article.author === 'Lnansy' ? 
+                                  `<div class="article-avatar">
+                                    <img src="images/3.png" alt="博主头像">
+                                   </div>` : 
+                                  `<i class="far fa-user"></i>`
+                                }
+                                ${article.author}
+                            </span>
+                            <span><i class="far fa-eye"></i> ${articleInteractions.views} 次浏览</span>
+                            ${currentUser.username === article.author ? `
+                                <button onclick="deleteArticle('${article.id}')" class="delete-btn">
+                                    <i class="fas fa-trash"></i>
+                                    <span>删除</span>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </header>
+                    <div class="article-content">
+                        ${article.content || '<p style="color:#888">暂无正文内容</p>'}
                     </div>
-                </header>
-                <div class="article-content">
-                    ${article.content || '<p style="color:#888">暂无正文内容</p>'}
-                </div>
-                ${attachmentsArr.length > 0 ? `
-                <div class="article-attachments" style="margin: 20px 0;">
-                    <strong>附件下载：</strong>
-                    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
-                        ${attachmentsArr.map(att => `
-                            <li><a href="${att.data}" download="${att.name}">${att.name}</a></li>
-                        `).join('')}
-                    </ul>
-                </div>
-                ` : ''}
-                <div class="article-actions">
-                    <button class="action-button like-button ${isLiked ? 'liked' : ''}" onclick="handleLike('${article.id}')">
-                        <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
-                        <span>${articleInteractions.likes.length}</span>
-                    </button>
-                    <button class="action-button comment-button" onclick="focusCommentForm()">
-                        <i class="far fa-comment"></i>
-                        <span>${articleInteractions.comments.length}</span>
-                    </button>
-                </div>
-                <div class="comments-section">
-                    <h3 class="comments-header">评论 (${articleInteractions.comments.length})</h3>
-                    <div class="comments-list">
-                        ${articleInteractions.comments.map(comment => {
-                            const likes = comment.likes || [];
-                            const isLikedByCurrentUser = currentUser && currentUser.username !== '访客' && likes.includes(currentUser.username);
-                            return `
-                                <div class="comment ${comment.isOwner ? 'owner-comment' : ''}" data-id="${comment.id}">
+                    ${attachmentsArr.length > 0 ? `
+                    <div class="article-attachments" style="margin: 20px 0;">
+                        <strong>附件下载：</strong>
+                        <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                            ${attachmentsArr.map(att => `
+                                <li><a href="${att.data}" download="${att.name}">${att.name}</a></li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+                    <div class="article-actions">
+                        <button class="action-button like-button ${isLiked ? 'liked' : ''}" onclick="handleLike('${article.id}')">
+                            <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
+                            <span>${articleInteractions.likes.length}</span>
+                        </button>
+                        <button class="action-button comment-button" onclick="focusCommentForm()">
+                            <i class="far fa-comment"></i>
+                            <span>${articleInteractions.comments.length}</span>
+                        </button>
+                    </div>
+                    <div class="comments-section">
+                        <h3 class="comments-header">评论 (${articleInteractions.comments.length})</h3>
+                        <div class="comments-list">
+                            ${articleInteractions.comments.map(comment => {
+                                const likes = comment.likes || [];
+                                const isLikedByCurrentUser = currentUser && currentUser.username !== '访客' && likes.includes(currentUser.username);
+                                return `
+                                    <div class="comment ${comment.isOwner ? 'owner-comment' : ''}" data-id="${comment.id}">
                                     <div class="comment-header">
                                         <span class="comment-author">
-                                            ${comment.userId === 'Lnansy' ? 
-                                              `<img src="images/3.png" alt="博主头像">` : 
-                                              `<i class="fas fa-user-circle"></i>`
-                                            }
+                                                ${comment.userId === 'Lnansy' ? 
+                                                  `<img src="images/3.png" alt="博主头像">` : 
+                                                  `<i class="fas fa-user-circle"></i>`
+                                                }
                                             ${comment.userId}
                                             ${comment.isOwner ? '<span class="owner-badge">博主</span>' : ''}
                                         </span>
                                         <span class="comment-date">${new Date(comment.timestamp).toLocaleString()}</span>
                                     </div>
                                     <div class="comment-content">${comment.content}</div>
-                                    <div class="comment-actions">
-                                        <button class="comment-like-button ${isLikedByCurrentUser ? 'liked' : ''}" onclick="handleCommentLike('${article.id}', '${comment.id}')">
-                                            <i class="fa${isLikedByCurrentUser ? 's' : 'r'} fa-heart"></i>
-                                            <span>${likes.length}</span>
-                                        </button>
+                                        <div class="comment-actions">
+                                            <button class="comment-like-button ${isLikedByCurrentUser ? 'liked' : ''}" onclick="handleCommentLike('${article.id}', '${comment.id}')">
+                                                <i class="fa${isLikedByCurrentUser ? 's' : 'r'} fa-heart"></i>
+                                                <span>${likes.length}</span>
+                                            </button>
+                                        </div>
                                     </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="comment-form">
+                            <div class="comment-form-header">
+                                <div class="comment-avatar">
+                                    ${currentUser.username === 'Lnansy' ? 
+                                      `<img src="images/3.png" alt="博主头像">` : 
+                                      `<i class="fas fa-user-circle"></i>`
+                                    }
                                 </div>
-                            `;
-                        }).join('')}
-                    </div>
-                    <div class="comment-form">
-                        <div class="comment-form-header">
-                            <div class="comment-avatar">
-                                ${currentUser.username === 'Lnansy' ? 
-                                  `<img src="images/3.png" alt="博主头像">` : 
-                                  `<i class="fas fa-user-circle"></i>`
-                                }
+                                <span>${currentUser.username}</span>
                             </div>
-                            <span>${currentUser.username}</span>
-                        </div>
-                        <div class="emoji-input-wrapper">
-                            <button class="emoji-picker-trigger" data-target="commentInput">
-                                <i class="far fa-smile"></i>
-                            </button>
+                            <div class="emoji-input-wrapper">
+                                <button class="emoji-picker-trigger" data-target="commentInput">
+                                    <i class="far fa-smile"></i>
+                                </button>
                             <textarea placeholder="写下你的评论..." id="commentInput"></textarea>
-                            <a href="emoji-preview.html" class="emoji-help" title="查看所有可用表情" target="_blank"><i class="far fa-question-circle"></i></a>
+                                <a href="emoji-preview.html" class="emoji-help" title="查看所有可用表情" target="_blank"><i class="far fa-question-circle"></i></a>
+                            </div>
+                            <button onclick="submitComment('${article.id}')">发表评论</button>
                         </div>
-                        <button onclick="submitComment('${article.id}')">发表评论</button>
                     </div>
-                </div>
-            `;
+                `;
 
-            articleContentNode.innerHTML = articleHtml;
-            document.title = `${article.title} - Lnansy's World`;
+                articleContentNode.innerHTML = articleHtml;
+                document.title = `${article.title} - Lnansy's World`;
+            } catch (error) {
+                console.error('加载文章失败：', error);
+                const articleContentNode = document.getElementById('articleContent');
+                articleContentNode.innerHTML = '<p class="error">加载文章失败，请稍后重试</p>';
+            }
         }
 
         // 删除文章的函数
@@ -638,26 +636,27 @@
                 return;
             }
 
-            const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
-            const article = publishedContent.find(item => String(item.id) === String(articleId));
-            
-            if (!article || currentUser.username !== article.author) {
-                alert('你没有权限删除这篇文章！');
-                return;
-            }
-
             if (confirm('确定要删除这篇文章吗？此操作不可恢复！')) {
-                // 删除文章
-                const newPublishedContent = publishedContent.filter(item => String(item.id) !== String(articleId));
-                localStorage.setItem('publishedContent', JSON.stringify(newPublishedContent));
-
-                // 删除相关的互动数据
-                const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
-                delete interactions[articleId];
-                localStorage.setItem('contentInteractions', JSON.stringify(interactions));
-
-                alert('文章已成功删除！');
-                window.location.href = 'index.html';  // 删除后返回首页
+                try {
+                    const response = await fetch(`/api/articles/${articleId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                        },
+                        body: JSON.stringify({ username: currentUser.username })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('删除文章失败');
+                    }
+                    
+                    alert('文章已成功删除！');
+                    window.location.href = 'index.html';  // 删除后返回首页
+                } catch (error) {
+                    console.error('删除文章失败：', error);
+                    alert('删除文章失败，请稍后重试');
+                }
             }
         }
 
@@ -667,28 +666,32 @@
                 return;
             }
 
-            const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
-            if (!interactions[articleId]) {
-                interactions[articleId] = { views: 0, likes: [], comments: [] };
+            try {
+                const response = await fetch(`/api/articles/${articleId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({ username: currentUser.username })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('点赞操作失败');
+                }
+                
+                const result = await response.json();
+                
+                // 更新页面显示
+                const likeButton = document.querySelector('.like-button');
+                const likeCount = likeButton.querySelector('span');
+                likeButton.classList.toggle('liked', result.isLiked);
+                likeButton.querySelector('i').className = `fa${result.isLiked ? 's' : 'r'} fa-heart`;
+                likeCount.textContent = result.likeCount;
+            } catch (error) {
+                console.error('点赞操作失败：', error);
+                alert('点赞操作失败，请稍后重试');
             }
-
-            const likes = new Set(interactions[articleId].likes);
-            if (likes.has(currentUser.username)) {
-                likes.delete(currentUser.username);
-            } else {
-                likes.add(currentUser.username);
-            }
-
-            interactions[articleId].likes = Array.from(likes);
-            localStorage.setItem('contentInteractions', JSON.stringify(interactions));
-
-            // 更新页面显示
-            const likeButton = document.querySelector('.like-button');
-            const likeCount = likeButton.querySelector('span');
-            likeButton.classList.toggle('liked');
-            const isLiked = likeButton.classList.contains('liked');
-            likeButton.querySelector('i').className = `fa${isLiked ? 's' : 'r'} fa-heart`;
-            likeCount.textContent = interactions[articleId].likes.length;
         }
 
         function focusCommentForm() {
@@ -709,26 +712,30 @@
                 return;
             }
 
-            const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
-            if (!interactions[articleId]) {
-                interactions[articleId] = { views: 0, likes: [], comments: [] };
+            try {
+                const response = await fetch(`/api/articles/${articleId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.username,
+                        content: comment
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('发表评论失败');
+                }
+                
+                // 重新加载文章以显示新评论
+                loadArticle(articleId);
+                commentInput.value = ''; // 清空评论框
+            } catch (error) {
+                console.error('发表评论失败：', error);
+                alert('发表评论失败，请稍后重试');
             }
-
-            const newComment = {
-                id: Date.now(),
-                userId: currentUser.username,
-                content: comment,
-                timestamp: Date.now(),
-                isOwner: currentUser.username === 'Lnansy', // 标记为博主评论
-                likes: [] // Initialize likes array
-            };
-
-            interactions[articleId].comments.push(newComment);
-            localStorage.setItem('contentInteractions', JSON.stringify(interactions));
-
-            // 重新加载文章以显示新评论
-            loadArticle(articleId);
-            commentInput.value = ''; // 清空评论框
         }
 
         async function handleCommentLike(articleId, commentId) {
@@ -737,54 +744,44 @@
                 return;
             }
 
-            const interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
-            if (!interactions[articleId]) {
-                interactions[articleId] = { views: 0, likes: [], comments: [] };
-                return;
-            }
-
-            // Find the comment
-            const commentIndex = interactions[articleId].comments.findIndex(c => String(c.id) === String(commentId));
-            if (commentIndex === -1) return;
-
-            // Initialize likes array if it doesn't exist
-            if (!interactions[articleId].comments[commentIndex].likes) {
-                interactions[articleId].comments[commentIndex].likes = [];
-            }
-
-            const comment = interactions[articleId].comments[commentIndex];
-            const likes = comment.likes;
-            const userIndex = likes.indexOf(currentUser.username);
-
-            if (userIndex === -1) {
-                // Add like
-                likes.push(currentUser.username);
-            } else {
-                // Remove like
-                likes.splice(userIndex, 1);
-            }
-
-            // Update storage
-            localStorage.setItem('contentInteractions', JSON.stringify(interactions));
-
-            // Update UI
-            const commentElement = document.querySelector(`.comment[data-id="${commentId}"]`);
-            if (commentElement) {
-                const likeButton = commentElement.querySelector('.comment-like-button');
-                const likeCount = likeButton.querySelector('span');
-                const isLiked = userIndex === -1; // If it was -1, we added a like
+            try {
+                const response = await fetch(`/api/articles/${articleId}/comments/${commentId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({ username: currentUser.username })
+                });
                 
-                likeButton.classList.toggle('liked', isLiked);
-                likeButton.querySelector('i').className = `fa${isLiked ? 's' : 'r'} fa-heart`;
-                likeCount.textContent = likes.length;
-                
-                // Add animation when liking
-                if (isLiked) {
-                    likeButton.classList.add('animate-like');
-                    setTimeout(() => {
-                        likeButton.classList.remove('animate-like');
-                    }, 300);
+                if (!response.ok) {
+                    throw new Error('评论点赞失败');
                 }
+                
+                const result = await response.json();
+                
+                // Update UI
+                const commentElement = document.querySelector(`.comment[data-id="${commentId}"]`);
+                if (commentElement) {
+                    const likeButton = commentElement.querySelector('.comment-like-button');
+                    const likeCount = likeButton.querySelector('span');
+                    const isLiked = result.isLiked;
+                    
+                    likeButton.classList.toggle('liked', isLiked);
+                    likeButton.querySelector('i').className = `fa${isLiked ? 's' : 'r'} fa-heart`;
+                    likeCount.textContent = result.likeCount;
+                    
+                    // Add animation when liking
+                    if (isLiked) {
+                        likeButton.classList.add('animate-like');
+                        setTimeout(() => {
+                            likeButton.classList.remove('animate-like');
+                        }, 300);
+                    }
+                }
+            } catch (error) {
+                console.error('评论点赞失败：', error);
+                alert('评论点赞失败，请稍后重试');
             }
         }
 
@@ -862,8 +859,8 @@
                 }
             } catch (e) {
                 console.error('预填充用户状态出错:', e);
-            }
+        }
         })();
     </script>
 </body>
-</html>
+</html> 

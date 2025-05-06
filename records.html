@@ -359,8 +359,8 @@
                 </h2>
                 <div class="essay-list" id="essayList">
                     <!-- 内容将通过JavaScript动态添加 -->
-                </div>
-            </div>
+        </div>
+    </div>
 
             <!-- 文章部分 -->
             <div class="card" id="articleSection">
@@ -449,9 +449,7 @@
         }
 
         // 加载并显示内容
-        function loadContent(searchTerm = '') {
-            const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
-            const contentInteractions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
+        async function loadContent(searchTerm = '') {
             const essayList = document.getElementById('essayList');
             const articleList = document.getElementById('articleList');
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
@@ -463,114 +461,143 @@
             articleList.innerHTML = '';
             searchResults.innerHTML = '';
 
-            // 如果有搜索词，过滤内容
-            let filteredContent = publishedContent;
-            if (searchTerm) {
-                const searchLower = searchTerm.toLowerCase();
-                filteredContent = publishedContent.filter(item => 
-                    item.title.toLowerCase().includes(searchLower) ||
-                    item.content.toLowerCase().includes(searchLower) ||
-                    item.category.toLowerCase().includes(searchLower)
-                );
-                
-                // 显示搜索结果数量
-                searchResults.innerHTML = `找到 ${filteredContent.length} 条相关内容`;
-            }
-
-            // 根据用户类型筛选随笔内容
-            // 博主可以看到所有随笔，普通用户只能看到博主的随笔和自己的随笔
-            let userEssays = filteredContent.filter(item => {
-                if (item.type === 'article') {
-                    return true; // 所有文章都显示
-                } else if (item.type === 'essay') {
-                    // 博主可以看所有随笔
-                    if (isAdmin) {
-                        return true;
-                    }
-                    // 普通用户只能看到博主的随笔和自己的随笔
-                    return item.author === currentUser.username || item.author === 'Lnansy';
-                }
-                return false;
-            });
-
-            if (userEssays.length === 0) {
-                if (document.querySelector('.filter-button.active').dataset.type !== 'article') {
-                    essayList.innerHTML = '<div class="no-content">暂无随笔</div>';
-                }
-                
-                articleList.innerHTML = '<div class="no-content">暂无文章</div>';
-                
+            try {
+                // 构建API请求URL，包含搜索参数
+                let url = '/api/articles';
                 if (searchTerm) {
-                    searchResults.innerHTML = '未找到相关内容';
+                    url += `?search=${encodeURIComponent(searchTerm)}`;
                 }
-                return;
-            }
-
-            userEssays.forEach(item => {
-                const highlightText = (text) => {
-                    if (!searchTerm) return text;
-                    const regex = new RegExp(searchTerm, 'gi');
-                    return text.replace(regex, match => `<span class="highlight">${match}</span>`);
-                };
-
-                // 获取文章的交互数据
-                const interactions = contentInteractions[item.id] || { views: 0, likes: [], comments: [] };
-                const viewCount = interactions.views || 0;
-                const likeCount = interactions.likes ? interactions.likes.length : 0;
-                const commentCount = interactions.comments ? interactions.comments.length : 0;
-
-                const itemHtml = `
-                    <div class="${item.type}-item" data-category="${item.category}">
-                        <h3 class="${item.type}-title">
-                            ${highlightText(item.title)}
-                            ${currentUser.username === item.author || isAdmin ? 
-                                `<button class="delete-button" data-id="${item.id}">
-                                    <i class="fas fa-trash"></i>
-                                </button>` : 
-                                ''}
-                        </h3>
-                        <div class="${item.type}-meta">
-                            <span class="${item.type}-date">${new Date(item.date).toLocaleDateString()}</span>
-                            <span class="${item.type}-category">${highlightText(item.category)}</span>
-                            <span class="${item.type}-author">${item.author}</span>
-                        </div>
-                        <p class="${item.type}-excerpt">${highlightText(item.content.substring(0, 200))}...</p>
-                        <div class="${item.type}-footer">
-                            <a href="article.html?id=${item.id}" class="read-more">阅读全文</a>
-                            <div class="${item.type}-stats">
-                                <span><i class="far fa-eye"></i> ${viewCount}</span>
-                                <span><i class="far fa-heart"></i> ${likeCount}</span>
-                                <span><i class="far fa-comment"></i> ${commentCount}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                if (item.type === 'essay') {
-                    essayList.innerHTML += itemHtml;
-                } else {
-                    articleList.innerHTML += itemHtml;
-                }
-            });
-
-            // 添加删除功能
-            document.querySelectorAll('.delete-button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    if (confirm('确定要删除这篇内容吗？')) {
-                        const id = e.currentTarget.dataset.id;
-                        let content = JSON.parse(localStorage.getItem('publishedContent') || '[]');
-                        content = content.filter(item => item.id != id);
-                        localStorage.setItem('publishedContent', JSON.stringify(content));
-                        
-                        // 同时删除交互数据
-                        let interactions = JSON.parse(localStorage.getItem('contentInteractions') || '{}');
-                        delete interactions[id];
-                        localStorage.setItem('contentInteractions', JSON.stringify(interactions));
-                        
-                        loadContent(); // 重新加载内容
+                
+                // 获取文章数据
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                     }
                 });
-            });
+                
+                if (!response.ok) {
+                    throw new Error('获取文章列表失败');
+                }
+                
+                const contentData = await response.json();
+                
+                // 显示搜索结果数量
+                if (searchTerm) {
+                    searchResults.innerHTML = `找到 ${contentData.length} 条相关内容`;
+                }
+                
+                // 筛选内容
+                // 根据用户类型筛选随笔内容
+                // 博主可以看到所有随笔，普通用户只能看到博主的随笔和自己的随笔
+                let userEssays = contentData.filter(item => {
+                    if (item.type === 'article') {
+                        return true; // 所有文章都显示
+                    } else if (item.type === 'essay') {
+                        // 博主可以看所有随笔
+                        if (isAdmin) {
+                            return true;
+                        }
+                        // 普通用户只能看到博主的随笔和自己的随笔
+                        return item.author === currentUser.username || item.author === 'Lnansy';
+                    }
+                    return false;
+                });
+
+                if (userEssays.length === 0) {
+                    if (document.querySelector('.filter-button.active').dataset.type !== 'article') {
+                        essayList.innerHTML = '<div class="no-content">暂无随笔</div>';
+                    }
+                    
+                    articleList.innerHTML = '<div class="no-content">暂无文章</div>';
+                    
+                    if (searchTerm) {
+                        searchResults.innerHTML = '未找到相关内容';
+                    }
+                    return;
+                }
+
+                // 渲染文章和随笔列表
+                userEssays.forEach(item => {
+                    const highlightText = (text) => {
+                        if (!searchTerm) return text;
+                        const regex = new RegExp(searchTerm, 'gi');
+                        return text.replace(regex, match => `<span class="highlight">${match}</span>`);
+                    };
+
+                    // 获取文章的交互数据
+                    const viewCount = item.interactions.views || 0;
+                    const likeCount = item.interactions.likes ? item.interactions.likes.length : 0;
+                    const commentCount = item.interactions.comments ? item.interactions.comments.length : 0;
+
+                    const itemHtml = `
+                        <div class="${item.type}-item" data-category="${item.category}">
+                            <h3 class="${item.type}-title">
+                                ${highlightText(item.title)}
+                                ${currentUser.username === item.author || isAdmin ? 
+                                    `<button class="delete-button" data-id="${item.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>` : 
+                                    ''}
+                            </h3>
+                            <div class="${item.type}-meta">
+                                <span class="${item.type}-date">${new Date(item.date).toLocaleDateString()}</span>
+                                <span class="${item.type}-category">${highlightText(item.category)}</span>
+                                <span class="${item.type}-author">${item.author}</span>
+                            </div>
+                            <p class="${item.type}-excerpt">${highlightText(item.content.substring(0, 200))}...</p>
+                            <div class="${item.type}-footer">
+                                <a href="article.html?id=${item.id}" class="read-more">阅读全文</a>
+                                <div class="${item.type}-stats">
+                                    <span><i class="far fa-eye"></i> ${viewCount}</span>
+                                    <span><i class="far fa-heart"></i> ${likeCount}</span>
+                                    <span><i class="far fa-comment"></i> ${commentCount}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    if (item.type === 'essay') {
+                        essayList.innerHTML += itemHtml;
+                    } else {
+                        articleList.innerHTML += itemHtml;
+                    }
+                });
+
+                // 添加删除功能
+                document.querySelectorAll('.delete-button').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        if (confirm('确定要删除这篇内容吗？')) {
+                            const id = e.currentTarget.dataset.id;
+                            try {
+                                // 调用删除API
+                                const response = await fetch(`/api/articles/${id}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                                    },
+                                    body: JSON.stringify({ username: currentUser.username })
+                                });
+                                
+                                if (!response.ok) {
+                                    throw new Error('删除内容失败');
+                                }
+                                
+                                // 重新加载内容
+                                loadContent(searchTerm);
+                                alert('内容已成功删除！');
+                            } catch (error) {
+                                console.error('删除内容失败：', error);
+                                alert('删除内容失败，请稍后重试');
+                            }
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('加载内容失败：', error);
+                essayList.innerHTML = '<div class="error">加载内容失败，请稍后重试</div>';
+                articleList.innerHTML = '<div class="error">加载内容失败，请稍后重试</div>';
+            }
         }
 
         // 分类筛选功能
@@ -645,29 +672,29 @@
                 }
                 
                 // 重新添加添加按钮的事件监听
-                const addEssayBtn = document.getElementById('addEssayBtn');
+        const addEssayBtn = document.getElementById('addEssayBtn');
                 if (addEssayBtn) {
-                    addEssayBtn.addEventListener('click', () => {
+        addEssayBtn.addEventListener('click', () => {
                         if (currentUser.username === '访客') {
                             alert('请先登录后再发布随笔');
                             window.location.href = 'login.html';
                             return;
                         }
-                        window.location.href = 'editor.html?type=essay';
-                    });
+            window.location.href = 'editor.html?type=essay';
+        });
                 }
             }
-            
+
             // 文章添加按钮
             const addArticleBtn = document.getElementById('addArticleBtn');
             if (addArticleBtn) {
-                addArticleBtn.addEventListener('click', () => {
+        addArticleBtn.addEventListener('click', () => {
                     if (currentUser.username === '访客') {
                         alert('请先登录后再发布文章');
                         window.location.href = 'login.html';
                         return;
                     }
-                    window.location.href = 'editor.html?type=article';
+            window.location.href = 'editor.html?type=article';
                 });
             }
         });

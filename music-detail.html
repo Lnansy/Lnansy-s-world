@@ -149,7 +149,7 @@
         .emoji-help:hover {
             color: #007bff;
         }
-        
+
         .comment-input {
             flex: 1;
             padding: 10px 30px 10px 5px;
@@ -159,7 +159,7 @@
             outline: none;
             width: calc(100% - 80px);
         }
-        
+
         .comment-submit {
             background: #007bff;
             color: white;
@@ -1036,65 +1036,71 @@
                 return true;
             }
 
-            // 从服务器加载评论
+            // 获取评论
             async function loadComments() {
                 try {
-                    // 从localStorage获取评论数据
-                    const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
-                    const comments = musicComments[parsedMusicId] || [];
-                    
-                    // 清空评论列表
-                    commentsList.innerHTML = '';
+                    // 从API获取评论
+                    const response = await fetch(`/api/music-comments/${parsedMusicId}`);
+                    if (!response.ok) {
+                        throw new Error('获取评论失败');
+                    }
+                    const comments = await response.json();
                     
                     if (comments.length === 0) {
                         commentsList.innerHTML = '<div class="no-comments">暂无评论，快来发表第一条评论吧！</div>';
                         return;
                     }
-
-                    // 按时间倒序排列评论
-                    comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     
-                    // 添加评论到DOM
-                    comments.forEach(comment => addCommentToDOM(comment));
+                    commentsList.innerHTML = '';
+                    comments.forEach(comment => {
+                        addCommentToDOM(comment);
+                    });
                 } catch (error) {
                     console.error('Error loading comments:', error);
                     commentsList.innerHTML = '<div class="error-message">加载评论失败，请稍后重试</div>';
                 }
             }
-
-            // 添加评论到DOM
+            
+            // 将评论添加到页面
             function addCommentToDOM(comment) {
                 const commentElement = document.createElement('div');
-                commentElement.className = `comment ${comment.isOwner ? 'owner-comment' : ''}`;
+                commentElement.className = 'comment';
                 
-                // Get current user to check if they've liked this comment
-                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-                const username = currentUser ? currentUser.username : null;
+                // 获取当前登录的用户
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
+                
+                // 检查当前用户是否已点赞这条评论
                 const likes = comment.likes || [];
-                const isLiked = username && likes.includes(username);
+                const isLiked = likes.includes(currentUser.username);
+                
+                // 检查是否是博主或当前用户的评论，可添加删除按钮
+                const canDelete = comment.isOwner || comment.username === currentUser.username;
+                
+                // 格式化时间
+                const date = new Date(comment.timestamp);
+                const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
                 
                 commentElement.innerHTML = `
-                    <div class="comment-header">
-                        <img src="images/3.png" alt="头像" class="comment-avatar" style="width:32px;height:32px;border-radius:50%;margin-right:8px;vertical-align:middle;">
-                        <span class="comment-author">
-                            ${comment.isOwner ? '<i class="fas fa-crown owner-icon"></i>' : ''}
-                            ${comment.username}
-                            ${comment.isOwner ? '<span class="owner-badge">博主</span>' : ''}
-                        </span>
-                        <span class="comment-time">${new Date(comment.timestamp).toLocaleString()}</span>
+                    <div class="comment-author">
+                        ${comment.isOwner ? 
+                            '<span class="blogger-badge">博主</span>' : ''}
+                        ${comment.username}
+                        <span class="comment-date">${formattedDate}</span>
                     </div>
                     <div class="comment-content">${comment.content}</div>
                     <div class="comment-actions">
                         <button class="like-button ${isLiked ? 'liked' : ''}" data-id="${comment.id}">
-                            <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
-                            <span>${likes.length || 0}</span>
+                            <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i><span>${likes.length}</span>
                         </button>
-                        ${comment.userId === username ? 
-                            `<button class="delete-comment" data-id="${comment.id}">删除</button>` : ''}
+                        ${canDelete ? 
+                            `<button class="delete-comment" data-id="${comment.id}">
+                                <i class="fas fa-trash-alt"></i><span>删除</span>
+                            </button>` : ''}
                     </div>
                 `;
-                commentsList.insertBefore(commentElement, commentsList.firstChild);
-
+                
+                commentsList.appendChild(commentElement);
+                
                 // Add like event listener
                 const likeBtn = commentElement.querySelector('.like-button');
                 if (likeBtn) {
@@ -1106,80 +1112,79 @@
                 if (deleteBtn) {
                     deleteBtn.addEventListener('click', () => {
                         if (confirm('确定要删除这条评论吗？')) {
-                            try {
-                                // 从localStorage中删除评论
-                                const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
-                                const comments = musicComments[parsedMusicId] || [];
-                                const updatedComments = comments.filter(c => c.id !== comment.id);
-                                musicComments[parsedMusicId] = updatedComments;
-                                localStorage.setItem('musicComments', JSON.stringify(musicComments));
-                                
-                                // 从DOM中移除评论
-                                commentElement.remove();
-                                
-                                // 如果没有评论了，显示提示信息
-                                if (updatedComments.length === 0) {
-                                    commentsList.innerHTML = '<div class="no-comments">暂无评论，快来发表第一条评论吧！</div>';
-                                }
-                            } catch (error) {
-                                console.error('Error deleting comment:', error);
-                                alert('删除评论失败，请稍后重试');
-                            }
+                            deleteComment(comment.id);
                         }
                     });
                 }
             }
 
-            // Add the function to handle comment likes
-            function handleLikeComment(commentId) {
+            // 处理评论点赞
+            async function handleLikeComment(commentId) {
                 const currentUser = JSON.parse(localStorage.getItem('currentUser'));
                 if (!currentUser || currentUser.username === '访客') {
                     alert('请先登录后再点赞！');
                     return;
                 }
 
-                const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
-                const comments = musicComments[parsedMusicId] || [];
-                
-                // Find the comment
-                const commentIndex = comments.findIndex(c => c.id === commentId);
-                if (commentIndex === -1) return;
-                
-                // Initialize likes array if it doesn't exist
-                if (!comments[commentIndex].likes) {
-                    comments[commentIndex].likes = [];
-                }
-                
-                // Toggle like
-                const likes = comments[commentIndex].likes;
-                const userIndex = likes.indexOf(currentUser.username);
-                
-                if (userIndex === -1) {
-                    // Add like
-                    likes.push(currentUser.username);
-                } else {
-                    // Remove like
-                    likes.splice(userIndex, 1);
-                }
-                
-                // Update storage
-                musicComments[parsedMusicId] = comments;
-                localStorage.setItem('musicComments', JSON.stringify(musicComments));
-                
-                // Update UI
-                const likeButton = document.querySelector(`.like-button[data-id="${commentId}"]`);
-                if (likeButton) {
-                    const isLiked = userIndex === -1; // If it was -1, we added a like
-                    likeButton.classList.toggle('liked', isLiked);
-                    likeButton.innerHTML = `<i class="fa${isLiked ? 's' : 'r'} fa-heart"></i><span>${likes.length}</span>`;
+                try {
+                    // 调用API处理点赞
+                    const response = await fetch(`/api/music-comments/${commentId}/like`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username: currentUser.username })
+                    });
                     
-                    // Add animation when liking
-                    if (isLiked) {
-                        likeButton.classList.add('animate-like');
-                        setTimeout(() => {
-                            likeButton.classList.remove('animate-like');
-                        }, 300);
+                    if (!response.ok) {
+                        throw new Error('点赞失败');
                     }
+                    
+                    const result = await response.json();
+                    
+                    // 更新UI
+                    const likeButton = document.querySelector(`.like-button[data-id="${commentId}"]`);
+                    if (likeButton) {
+                        likeButton.classList.toggle('liked', result.isLiked);
+                        likeButton.innerHTML = `<i class="fa${result.isLiked ? 's' : 'r'} fa-heart"></i><span>${result.likes.length}</span>`;
+                        
+                        // 添加动画效果
+                        if (result.isLiked) {
+                            likeButton.classList.add('animate-like');
+                            setTimeout(() => {
+                                likeButton.classList.remove('animate-like');
+                            }, 300);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error liking comment:', error);
+                    alert('点赞失败，请稍后重试');
+                }
+            }
+            
+            // 删除评论
+            async function deleteComment(commentId) {
+                try {
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                    
+                    // 调用API删除评论
+                    const response = await fetch(`/api/music-comments/${commentId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username: currentUser.username })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('删除评论失败');
+                    }
+                    
+                    // 重新加载评论
+                    loadComments();
+                } catch (error) {
+                    console.error('Error deleting comment:', error);
+                    alert('删除评论失败，请稍后重试');
                 }
             }
 
@@ -1199,30 +1204,34 @@
 
                 try {
                     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-                    const newComment = {
-                        id: Date.now().toString(),
-                        userId: currentUser.username,
-                        username: currentUser.username,
-                        content: content,
-                        timestamp: new Date().toISOString(),
-                        isOwner: currentUser.username === 'Lnansy',
-                        likes: []
-                    };
-
-                    // 保存评论到localStorage
-                    const musicComments = JSON.parse(localStorage.getItem('musicComments') || '{}');
-                    const comments = musicComments[parsedMusicId] || [];
-                    comments.push(newComment);
-                    musicComments[parsedMusicId] = comments;
-                    localStorage.setItem('musicComments', JSON.stringify(musicComments));
-
-                    // 添加评论到DOM
+                    
+                    // 发送评论到API
+                    const response = await fetch('/api/music-comments', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            musicId: parsedMusicId,
+                            username: currentUser.username,
+                            content: content
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('发表评论失败');
+                    }
+                    
+                    // 获取新评论并添加到DOM
+                    const newComment = await response.json();
                     addCommentToDOM(newComment);
                     commentInput.value = '';
-
-                    // 触发评论添加事件
-                    const event = new CustomEvent('commentAdded', { detail: { musicId: parsedMusicId, comment: newComment } });
-                    document.dispatchEvent(event);
+                    
+                    // 如果当前显示的是"暂无评论"，则清空
+                    const noComments = commentsList.querySelector('.no-comments');
+                    if (noComments) {
+                        commentsList.innerHTML = '';
+                    }
                 } catch (error) {
                     console.error('Error posting comment:', error);
                     alert('发表评论失败，请稍后重试');

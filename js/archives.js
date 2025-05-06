@@ -1,5 +1,5 @@
 // API 请求函数
-const api = {
+const archivesApi = {
     async getArchives() {
         const response = await fetch('/api/archives');
         return response.json();
@@ -11,7 +11,7 @@ const archiveManager = {
     // 加载归档数据
     async loadArchives() {
         try {
-            const archives = await api.getArchives();
+            const archives = await archivesApi.getArchives();
             const archiveList = document.querySelector('.archive-list');
             
             if (archives.length === 0) {
