@@ -30,57 +30,10 @@ async function testConnection() {
   try {
     const connection = await pool.getConnection();
     console.log('数据库连接成功');
-    await createTables(connection);
     connection.release();
   } catch (error) {
     console.error('数据库连接失败:', error);
     process.exit(1);
-  }
-}
-
-// 创建数据库表
-async function createTables(connection) {
-  try {
-    // 创建留言表
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS messages (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        content TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )
-    `);
-    
-    // 创建音乐评论表
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS music_comments (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        music_id INT NOT NULL,
-        user_id INT NOT NULL,
-        content TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      )
-    `);
-    
-    // 创建音乐评论点赞表
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS music_comment_likes (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        comment_id INT NOT NULL,
-        user_id INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (comment_id) REFERENCES music_comments(id) ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        UNIQUE KEY (comment_id, user_id)
-      )
-    `);
-
-    console.log('数据库表创建成功');
-  } catch (error) {
-    console.error('数据库表创建失败:', error);
-    throw error;
   }
 }
 
@@ -90,15 +43,11 @@ testConnection();
 const articlesRoutes = require('./routes/articles');
 const usersRoutes = require('./routes/users');
 const statsRoutes = require('./routes/stats');
-const messagesRoutes = require('./routes/messages');
-const musicCommentsRoutes = require('./routes/music-comments');
 
 // 使用路由
 app.use('/api/articles', articlesRoutes(pool));
 app.use('/api/users', usersRoutes(pool));
 app.use('/api/stats', statsRoutes(pool));
-app.use('/api/messages', messagesRoutes(pool));
-app.use('/api/music-comments', musicCommentsRoutes(pool));
 
 // 首页路由
 app.get('/', (req, res) => {

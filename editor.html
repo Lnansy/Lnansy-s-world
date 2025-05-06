@@ -296,7 +296,7 @@
         });
 
         // 保存草稿
-        document.querySelector('.save-draft').addEventListener('click', async () => {
+        document.querySelector('.save-draft').addEventListener('click', () => {
             const content = {
                 title: document.querySelector('.editor-title-input').value,
                 type: document.querySelector('#contentType').value,
@@ -304,33 +304,10 @@
                 tags: Array.from(tags),
                 content: quill.root.innerHTML,
                 status: 'draft',
-                date: new Date().toISOString(),
-                author: currentUser.username
+                date: new Date().toISOString()
             };
-            
-            try {
-                const response = await fetch('/api/drafts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
-                    body: JSON.stringify(content)
-                });
-                
-                if (!response.ok) {
-                    throw new Error('保存草稿失败');
-                }
-                
-                alert('草稿已保存！');
-            } catch (error) {
-                console.error('保存草稿失败：', error);
-                alert('保存草稿失败，请稍后重试');
-                
-                // 保存到本地作为备份
-                localStorage.setItem('draft_' + Date.now(), JSON.stringify(content));
-                alert('已将草稿保存到本地，建议您复制内容防止丢失');
-            }
+            localStorage.setItem('draft_' + Date.now(), JSON.stringify(content));
+            alert('草稿已保存！');
         });
 
         // 附件上传与预览
@@ -361,78 +338,39 @@
                 alert('请填写标题和发布时间！');
                 return;
             }
-            
-            // 显示发布中的提示
-            publishBtn.disabled = true;
-            publishBtn.textContent = '发布中...';
-            
-            try {
-                // 读取所有附件为base64
-                async function readFilesAsBase64(files) {
-                    const promises = files.map(file => new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => resolve({
-                            name: file.name,
-                            type: file.type,
-                            data: reader.result
-                        });
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file);
-                    }));
-                    return Promise.all(promises);
-                }
-                
-                const attachmentsData = await readFilesAsBase64(attachments);
-                
-                const content = {
-                    title: title,
-                    type: type,
-                    category: category,
-                    tags: Array.from(tags),
-                    content: quill.root.innerHTML,
-                    status: 'published',
-                    date: new Date(publishDate).toISOString(),
-                    author: currentUser.username,
-                    attachments: attachmentsData
-                };
-                
-                // 调用API发布内容
-                const response = await fetch('/api/articles', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
-                    body: JSON.stringify(content)
-                });
-                
-                if (!response.ok) {
-                    throw new Error('发布内容失败');
-                }
-                
-                alert('发布成功！');
-                window.location.href = 'records.html';
-            } catch (error) {
-                console.error('发布内容失败：', error);
-                alert('发布内容失败，请稍后重试');
-                
-                // 恢复按钮状态
-                publishBtn.disabled = false;
-                publishBtn.textContent = '发布';
-                
-                // 保存到本地作为备份
-                localStorage.setItem('draft_' + Date.now(), JSON.stringify({
-                    title: title,
-                    type: type,
-                    category: category,
-                    tags: Array.from(tags),
-                    content: quill.root.innerHTML,
-                    status: 'published',
-                    date: new Date(publishDate).toISOString(),
-                    author: currentUser.username
+            // 读取所有附件为base64
+            async function readFilesAsBase64(files) {
+                const promises = files.map(file => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve({
+                        name: file.name,
+                        type: file.type,
+                        data: reader.result
+                    });
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
                 }));
-                alert('已将内容保存到本地草稿，建议您复制内容防止丢失');
+                return Promise.all(promises);
             }
+            const attachmentsData = await readFilesAsBase64(attachments);
+            const content = {
+                id: Date.now(),
+                title: title,
+                type: type,
+                category: category,
+                tags: Array.from(tags),
+                content: quill.root.innerHTML,
+                status: 'published',
+                date: new Date(publishDate).toISOString(),
+                author: currentUser.username,
+                attachments: attachmentsData
+            };
+            let publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+            publishedContent.push(content);
+            publishedContent.sort((a, b) => new Date(b.date) - new Date(a.date));
+            localStorage.setItem('publishedContent', JSON.stringify(publishedContent));
+            alert('发布成功！');
+            window.location.href = 'records.html';
         });
     </script>
 </body>
