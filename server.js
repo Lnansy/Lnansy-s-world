@@ -3,6 +3,9 @@ const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
+const router = express.Router();
+const db = require('../db/connection'); // 确保正确引入数据库连接
+const articlesApi = require('../api/articles');
 
 // 创建Express应用
 const app = express();
@@ -49,6 +52,39 @@ app.use('/api/articles', articlesRoutes(pool));
 app.use('/api/users', usersRoutes(pool));
 app.use('/api/stats', statsRoutes(pool));
 
+// 使用API路由
+router.use('/api/articles', articlesApi);
+
+// 获取文章评论
+router.get('/:id/comments', async (req, res) => {
+    const articleId = req.params.id;
+    const comments = await db.getCommentsForArticle(articleId); // 从数据库获取评论
+    res.json(comments);
+});
+
+// 添加评论
+router.post('/:id/comments', async (req, res) => {
+    const articleId = req.params.id;
+    const { comment } = req.body;
+    await db.addCommentToArticle(articleId, comment); // 将评论添加到数据库
+    res.status(201).send('评论已添加');
+});
+
+// 获取音乐评论
+router.get('/:id/comments', async (req, res) => {
+    const musicId = req.params.id;
+    const comments = await db.getCommentsForMusic(musicId); // 从数据库获取评论
+    res.json(comments);
+});
+
+// 添加评论
+router.post('/:id/comments', async (req, res) => {
+    const musicId = req.params.id;
+    const { comment } = req.body;
+    await db.addCommentToMusic(musicId, comment); // 将评论添加到数据库
+    res.status(201).send('评论已添加');
+});
+
 // 首页路由
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -67,5 +103,7 @@ app.use((err, req, res, next) => {
 
 // 启动服务器
 app.listen(port, () => {
-  console.log(`服务器运行在 http://localhost:${port}`);
-}); 
+  console.log(`服务器正在运行在 http://localhost:${port}`);
+});
+
+module.exports = router; 
