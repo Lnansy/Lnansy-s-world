@@ -3,10 +3,50 @@ const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
+const WebSocket = require('ws');
+const http = require('http');
 
 // 创建Express应用
 const app = express();
-const port = process.env.PORT || 3000;
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+// 存储所有连接的客户端
+const clients = new Set();
+
+// WebSocket连接处理
+wss.on('connection', (ws) => {
+  // 添加新客户端
+  clients.add(ws);
+  console.log('新的WebSocket连接已建立');
+
+  // 处理消息
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message);
+      // 广播消息给所有客户端
+      broadcastMessage(data);
+    } catch (error) {
+      console.error('WebSocket消息处理错误:', error);
+    }
+  });
+
+  // 处理连接关闭
+  ws.on('close', () => {
+    clients.delete(ws);
+    console.log('WebSocket连接已关闭');
+  });
+});
+
+// 广播消息给所有客户端
+function broadcastMessage(data) {
+  const message = JSON.stringify(data);
+  clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+}
 
 // CORS配置
 const corsOptions = {
@@ -62,9 +102,9 @@ const usersRoutes = require('./routes/users');
 const statsRoutes = require('./routes/stats');
 
 // 使用路由
-app.use('/api/articles', articlesRoutes(pool));
-app.use('/api/users', usersRoutes(pool));
-app.use('/api/stats', statsRoutes(pool));
+app.use('/api/articles', articlesRoutes(pool, broadcastMessage));
+app.use('/api/users', usersRoutes(pool, broadcastMessage));
+app.use('/api/stats', statsRoutes(pool, broadcastMessage));
 
 // 首页路由
 app.get('/', (req, res) => {
@@ -93,8 +133,9 @@ app.use((err, req, res, next) => {
 });
 
 // 启动服务器
-app.listen(port, () => {
+const port = process.env.PORT || 3000;
+server.listen(port, () => {
   console.log(`服务器正在运行在 http://localhost:${port}`);
 });
 
-module.exports = app; 
+module.exports = { app, server, broadcastMessage }; 

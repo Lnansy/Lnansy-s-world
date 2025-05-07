@@ -104,10 +104,10 @@
 
         /* 卡片样式优化 */
         .profile-card, .welcome-card, .tag-cloud-section {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(10px);
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             padding: 25px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -115,7 +115,7 @@
 
         .profile-card:hover, .welcome-card:hover, .tag-cloud-section:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
             background: rgba(255, 255, 255, 0.4);
         }
 
@@ -127,7 +127,7 @@
             overflow: hidden;
             padding: 20px;
             color: white;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
         }
 
         .profile-card::before {
@@ -1441,7 +1441,6 @@
         // 检查用户登录状态
         function checkUserLoginStatus() {
             try {
-                // 直接从localStorage获取用户信息
                 const user = JSON.parse(localStorage.getItem('currentUser') || '{"username": "访客"}');
                 updateUserSection(user);
             } catch (error) {
@@ -1453,29 +1452,23 @@
         // 更新资料卡统计
         function updateProfileStats() {
             try {
-                // 从localStorage获取文章数据，与records.html保持一致
-            const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
-            
-                // 计算文章和随笔的总数
+                const publishedContent = JSON.parse(localStorage.getItem('publishedContent') || '[]');
+                
                 const totalArticles = publishedContent.length;
                 const articleNode = document.getElementById('stat-article');
                 if (articleNode) articleNode.textContent = totalArticles;
                 
-                // 收集所有标签并计数
                 const allTags = new Set();
-            publishedContent.forEach(item => {
-                    // 首先添加分类作为标签
-                if (item.category) {
+                publishedContent.forEach(item => {
+                    if (item.category) {
                         allTags.add(item.category);
-                }
+                    }
                     
-                    // 然后添加文章的标签
-                if (item.tags && Array.isArray(item.tags)) {
+                    if (item.tags && Array.isArray(item.tags)) {
                         item.tags.forEach(tag => allTags.add(tag));
-                }
-            });
-            
-                // 更新标签数量
+                    }
+                });
+                
                 const tagNode = document.getElementById('stat-tag');
                 if (tagNode) tagNode.textContent = allTags.size;
                 
@@ -1485,7 +1478,6 @@
                 });
             } catch (error) {
                 console.error('更新资料卡统计失败:', error);
-                // 在更新失败时显示默认值，避免显示NaN或undefined
                 const articleNode = document.getElementById('stat-article');
                 const tagNode = document.getElementById('stat-tag');
                 
@@ -1493,6 +1485,135 @@
                 if (tagNode) tagNode.textContent = '0';
             }
         }
+
+        // 处理数据更新
+        function handleDataUpdate(data) {
+            console.log('[Debug] 收到数据更新:', data);
+            
+            // 根据更新类型处理不同的数据
+            switch(data.endpoint) {
+                case '/articles':
+                    // 更新文章列表
+                    updateProfileStats();
+                    updateTagCloud();
+                    // 如果当前在文章详情页，更新文章内容
+                    if (window.location.pathname.includes('article.html')) {
+                        const articleId = new URLSearchParams(window.location.search).get('id');
+                        if (articleId === data.data.id) {
+                            updateArticleContent(data.data);
+                        }
+                    }
+                    break;
+                    
+                case '/articles/comments':
+                    // 更新评论列表
+                    if (window.location.pathname.includes('article.html')) {
+                        const articleId = new URLSearchParams(window.location.search).get('id');
+                        if (articleId === data.data.articleId) {
+                            updateComments(data.data.comments);
+                        }
+                    }
+                    break;
+                    
+                case '/messages':
+                    // 更新留言列表
+                    if (window.location.pathname.includes('messages.html')) {
+                        updateMessages(data.data);
+                    }
+                    break;
+                    
+                case '/users/me':
+                    // 更新用户信息
+                    checkUserLoginStatus();
+                    break;
+                    
+                case '/stats/contents':
+                    // 更新统计数据
+                    updateProfileStats();
+                    break;
+            }
+        }
+
+        // 更新文章内容
+        function updateArticleContent(article) {
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+            const modalMeta = document.getElementById('modalMeta');
+            
+            if (modalTitle) modalTitle.textContent = article.title;
+            if (modalContent) modalContent.innerHTML = article.content;
+            if (modalMeta) {
+                modalMeta.innerHTML = `
+                    <span><i class="far fa-user"></i> ${article.author}</span>
+                    <span><i class="far fa-calendar"></i> ${new Date(article.createdAt).toLocaleDateString()}</span>
+                    <span><i class="far fa-folder"></i> ${article.category}</span>
+                `;
+            }
+        }
+
+        // 更新评论列表
+        function updateComments(comments) {
+            const commentsList = document.querySelector('.modal-comments-list');
+            if (!commentsList) return;
+            
+            commentsList.innerHTML = comments.map(comment => `
+                <div class="modal-comment ${comment.author === 'Lnansy' ? 'owner-comment' : ''}">
+                    <div class="modal-comment-header">
+                        <div class="modal-comment-author">
+                            ${comment.author === 'Lnansy' ? '<i class="fas fa-crown owner-icon"></i>' : ''}
+                            ${comment.author}
+                            ${comment.author === 'Lnansy' ? '<span class="owner-badge">博主</span>' : ''}
+                        </div>
+                        <div class="modal-comment-date">${new Date(comment.createdAt).toLocaleString()}</div>
+                    </div>
+                    <div class="modal-comment-content">${comment.content}</div>
+                </div>
+            `).join('');
+        }
+
+        // 更新留言列表
+        function updateMessages(messages) {
+            const messagesList = document.querySelector('.messages-list');
+            if (!messagesList) return;
+            
+            messagesList.innerHTML = messages.map(message => `
+                <div class="message-item ${message.author === 'Lnansy' ? 'owner-message' : ''}">
+                    <div class="message-header">
+                        <div class="message-author">
+                            ${message.author === 'Lnansy' ? '<i class="fas fa-crown owner-icon"></i>' : ''}
+                            ${message.author}
+                            ${message.author === 'Lnansy' ? '<span class="owner-badge">博主</span>' : ''}
+                        </div>
+                        <div class="message-date">${new Date(message.createdAt).toLocaleString()}</div>
+                    </div>
+                    <div class="message-content">${message.content}</div>
+                </div>
+            `).join('');
+        }
+
+        // 页面加载时执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查用户登录状态
+            checkUserLoginStatus();
+            
+            // 更新资料卡统计
+            updateProfileStats();
+            
+            // 更新标签云
+            updateTagCloud();
+            
+            // 设置定时更新统计
+            setInterval(updateProfileStats, 60000);
+            
+            // 添加WebSocket数据更新监听器
+            api.ws.onDataUpdate(handleDataUpdate);
+        });
+        
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', function() {
+            // 移除WebSocket数据更新监听器
+            api.ws.offDataUpdate(handleDataUpdate);
+        });
 
         // 更新用户状态
         function updateUserSection(user) {
@@ -1607,21 +1728,6 @@
             }
         };
 
-        // 页面加载时执行
-        document.addEventListener('DOMContentLoaded', function() {
-            // 检查用户登录状态
-            checkUserLoginStatus();
-            
-            // 更新资料卡统计
-            updateProfileStats();
-            
-            // 更新标签云
-            updateTagCloud();
-            
-            // 设置定时更新统计
-            setInterval(updateProfileStats, 60000); // 每分钟更新一次
-        });
-        
         // 更新标签云数据
         function updateTagCloud() {
             try {
@@ -1698,6 +1804,12 @@
                 console.error('更新标签云失败:', error);
                     }
                 }
+
+        // 添加数据更新监听器
+        api.ws.onDataUpdate((data) => {
+            // 处理数据更新
+            console.log('收到数据更新:', data);
+        });
     </script>
     
     <!-- 预先填充用户状态，避免闪烁 -->

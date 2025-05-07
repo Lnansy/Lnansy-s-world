@@ -8,6 +8,92 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
   ? 'http://localhost:3000/api'  // 开发环境
   : '/api';  // 生产环境
 
+// WebSocket连接管理
+const wsManager = {
+  ws: null,
+  reconnectAttempts: 0,
+  maxReconnectAttempts: 5,
+  reconnectInterval: 3000,
+  listeners: new Map(),
+
+  // 初始化WebSocket连接
+  init() {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}`;
+    
+    this.ws = new WebSocket(wsUrl);
+    
+    this.ws.onopen = () => {
+      console.log('WebSocket连接已建立');
+      this.reconnectAttempts = 0;
+    };
+    
+    this.ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        this.notifyListeners(data);
+      } catch (error) {
+        console.error('WebSocket消息处理错误:', error);
+      }
+    };
+    
+    this.ws.onclose = () => {
+      console.log('WebSocket连接已关闭');
+      this.reconnect();
+    };
+    
+    this.ws.onerror = (error) => {
+      console.error('WebSocket错误:', error);
+    };
+  },
+
+  // 重连机制
+  reconnect() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      console.log(`尝试重新连接 (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+      setTimeout(() => this.init(), this.reconnectInterval);
+    } else {
+      console.error('WebSocket重连失败，已达到最大重试次数');
+    }
+  },
+
+  // 添加事件监听器
+  addListener(type, callback) {
+    if (!this.listeners.has(type)) {
+      this.listeners.set(type, new Set());
+    }
+    this.listeners.get(type).add(callback);
+  },
+
+  // 移除事件监听器
+  removeListener(type, callback) {
+    if (this.listeners.has(type)) {
+      this.listeners.get(type).delete(callback);
+    }
+  },
+
+  // 通知所有监听器
+  notifyListeners(data) {
+    const { type, payload } = data;
+    if (this.listeners.has(type)) {
+      this.listeners.get(type).forEach(callback => callback(payload));
+    }
+  },
+
+  // 发送消息
+  send(data) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(data));
+    } else {
+      console.error('WebSocket未连接，无法发送消息');
+    }
+  }
+};
+
+// 初始化WebSocket连接
+wsManager.init();
+
 // 数据缓存管理
 const cacheManager = {
   cache: new Map(),
@@ -126,6 +212,15 @@ async function apiRequest(endpoint, options = {}) {
     } else {
       // 非GET请求成功后清除相关缓存
       cacheManager.clearCache();
+      // 发送WebSocket消息通知其他客户端
+      wsManager.send({
+        type: 'dataUpdate',
+        payload: {
+          endpoint,
+          method: options.method,
+          data
+        }
+      });
     }
     
     return data;
@@ -310,6 +405,19 @@ const api = {
         return api.sync.forceSync();
       }
       return null;
+    }
+  },
+
+  // WebSocket相关方法
+  ws: {
+    // 添加数据更新监听器
+    onDataUpdate: (callback) => {
+      wsManager.addListener('dataUpdate', callback);
+    },
+
+    // 移除数据更新监听器
+    offDataUpdate: (callback) => {
+      wsManager.removeListener('dataUpdate', callback);
     }
   }
 };
