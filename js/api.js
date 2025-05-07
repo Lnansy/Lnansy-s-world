@@ -3,11 +3,67 @@
  * 处理前端与后端的通信
  */
 
-const API_BASE_URL = '/api';
+// 根据环境设置API基础URL
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'  // 开发环境
+  : '/api';  // 生产环境
+
+// 数据缓存管理
+const cacheManager = {
+  cache: new Map(),
+  lastSync: new Map(),
+
+  // 设置缓存
+  setCache(key, data, ttl = 60000) { // 默认缓存1分钟
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
+  },
+
+  // 获取缓存
+  getCache(key) {
+    const cached = this.cache.get(key);
+    if (!cached) return null;
+    
+    if (Date.now() - cached.timestamp > cached.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return cached.data;
+  },
+
+  // 清除缓存
+  clearCache(key) {
+    if (key) {
+      this.cache.delete(key);
+    } else {
+      this.cache.clear();
+    }
+  },
+
+  // 更新最后同步时间
+  updateLastSync(endpoint) {
+    this.lastSync.set(endpoint, Date.now());
+  },
+
+  // 检查是否需要同步
+  needsSync(endpoint, syncInterval = 30000) { // 默认30秒同步一次
+    const lastSync = this.lastSync.get(endpoint);
+    return !lastSync || (Date.now() - lastSync > syncInterval);
+  }
+};
 
 // 全局错误处理
 function handleError(error) {
   console.error('API错误:', error);
+  
+  // 如果是跨域错误，提供更友好的错误信息
+  if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+    return Promise.reject('无法连接到服务器，请检查网络连接或服务器状态');
+  }
   
   if (error.response && error.response.data && error.response.data.message) {
     return Promise.reject(error.response.data.message);
@@ -19,6 +75,15 @@ function handleError(error) {
 // 统一的API请求封装
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  const cacheKey = `${options.method || 'GET'}:${url}`;
+  
+  // 如果是GET请求且缓存有效，直接返回缓存数据
+  if (options.method === 'GET' || !options.method) {
+    const cachedData = cacheManager.getCache(cacheKey);
+    if (cachedData && !cacheManager.needsSync(endpoint)) {
+      return cachedData;
+    }
+  }
   
   // 获取存储的令牌
   const token = localStorage.getItem('authToken');
@@ -36,7 +101,8 @@ async function apiRequest(endpoint, options = {}) {
   try {
     const response = await fetch(url, {
       ...options,
-      headers
+      headers,
+      credentials: 'include' // 添加这行以支持跨域请求时发送cookies
     });
     
     // 检查响应状态
@@ -52,6 +118,16 @@ async function apiRequest(endpoint, options = {}) {
     
     // 尝试解析JSON响应
     const data = await response.json();
+    
+    // 缓存GET请求的响应
+    if (options.method === 'GET' || !options.method) {
+      cacheManager.setCache(cacheKey, data);
+      cacheManager.updateLastSync(endpoint);
+    } else {
+      // 非GET请求成功后清除相关缓存
+      cacheManager.clearCache();
+    }
+    
     return data;
   } catch (error) {
     return handleError(error);
@@ -211,8 +287,37 @@ const api = {
         method: 'GET'
       });
     }
+  },
+
+  // 添加数据同步方法
+  sync: {
+    // 强制同步所有数据
+    forceSync: async () => {
+      cacheManager.clearCache();
+      return Promise.all([
+        api.contents.getList(),
+        api.stats.getContentStats(),
+        api.stats.getCategories()
+      ]);
+    },
+
+    // 检查更新
+    checkUpdates: async () => {
+      const needsUpdate = Array.from(cacheManager.lastSync.entries())
+        .some(([endpoint, lastSync]) => cacheManager.needsSync(endpoint));
+      
+      if (needsUpdate) {
+        return api.sync.forceSync();
+      }
+      return null;
+    }
   }
 };
 
 // 导出API模块
-window.api = api; 
+window.api = api;
+
+// 添加自动同步机制
+setInterval(() => {
+  api.sync.checkUpdates().catch(console.error);
+}, 30000); // 每30秒检查一次更新 

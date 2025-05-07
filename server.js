@@ -8,8 +8,25 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// CORS配置
+const corsOptions = {
+  origin: function (origin, callback) {
+    // 允许的源列表
+    const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5000', 'http://127.0.0.1:5000'];
+    // 允许没有origin的请求（比如移动端APP）
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('不允许的跨域请求'));
+    }
+  },
+  credentials: true, // 允许携带凭证
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 // 中间件
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, './')));
@@ -62,7 +79,17 @@ app.use((req, res) => {
 // 错误处理中间件
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: '服务器内部错误', error: err.message });
+  
+  // 处理CORS错误
+  if (err.message === '不允许的跨域请求') {
+    return res.status(403).json({ message: '不允许的跨域请求' });
+  }
+  
+  // 处理其他错误
+  res.status(500).json({ 
+    message: '服务器内部错误', 
+    error: process.env.NODE_ENV === 'development' ? err.message : '请稍后重试'
+  });
 });
 
 // 启动服务器
